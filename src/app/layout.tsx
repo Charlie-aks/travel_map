@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(inter.className, "bg-slate-50 dark:bg-slate-950 antialiased h-screen flex flex-col overflow-hidden transition-colors")}>
+      <body className={cn(inter.className, "bg-slate-50 dark:bg-slate-950 antialiased h-dvh flex flex-col overflow-hidden transition-colors")}>
         <ThemeProvider 
           attribute="class" 
           defaultTheme="light" 

@@ -65,6 +65,7 @@ export function Navbar() {
                       return (
                         <SheetClose 
                           key={item.href} 
+                          nativeButton={false}
                           render={
                             <Link 
                               href={item.href}
@@ -100,6 +101,7 @@ export function Navbar() {
                       return (
                         <SheetClose 
                           key={item.href} 
+                          nativeButton={false}
                           render={
                             <Link 
                               href={item.href}
