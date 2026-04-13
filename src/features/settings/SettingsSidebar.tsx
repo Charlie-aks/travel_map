@@ -3,13 +3,14 @@
 import { useProfileStore } from "@/store/useProfileStore";
 import { User, LayoutGrid, Award, Settings, HelpCircle, LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useTranslation } from "@/i18n/useTranslation";
 
 export function SettingsSidebar() {
   const profile = useProfileStore((state) => state.profile);
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useTranslation();
 
   const navItems = [
@@ -60,7 +61,13 @@ export function SettingsSidebar() {
         <button className="w-full bg-[#0077b6] hover:bg-[#005f92] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md text-sm">
           {t.settingsSidebar.upgrade}
         </button>
-        <button className="flex items-center gap-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 font-bold px-4 py-3 rounded-xl transition-colors w-full text-sm">
+        <button 
+          onClick={() => {
+            useProfileStore.getState().logout();
+            router.push('/login');
+          }}
+          className="flex items-center gap-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 font-bold px-4 py-3 rounded-xl transition-colors w-full text-sm"
+        >
           <LogOut className="w-4 h-4" /> {t.settingsSidebar.logOut}
         </button>
       </div>

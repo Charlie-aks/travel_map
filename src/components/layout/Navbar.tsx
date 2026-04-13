@@ -13,6 +13,7 @@ export function Navbar() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const profile = useProfileStore((state) => state.profile);
+  const isAuthenticated = useProfileStore((state) => state.isAuthenticated);
   const { fetchLocations, locations } = useLocationStore();
 
   useEffect(() => {
@@ -21,6 +22,8 @@ export function Navbar() {
       fetchLocations();
     }
   }, [fetchLocations, locations.length]);
+
+  if (pathname === '/register' || pathname === '/login') return null;
 
   const mainNav = [
     { href: '/', label: t.navbar.explore, icon: <Compass className="w-5 h-5" /> },
@@ -161,15 +164,23 @@ export function Navbar() {
 
       {/* Right section: Profile */}
       <div className="flex items-center gap-4">
-        <Link href="/settings" className="hidden md:block text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-          <Settings className="w-5 h-5" />
-        </Link>
-        <button className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-          <Bell className="w-5 h-5" />
-        </button>
-        <Link href="/profile" className="hidden md:block w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm hover:ring-2 hover:ring-[#0077b6] dark:hover:ring-[#38bdf8] transition-all">
-          <img src={profile.avatarUrl} alt="User" className="w-full h-full object-cover" />
-        </Link>
+        {isAuthenticated ? (
+          <>
+            <Link href="/settings" className="hidden md:block text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              <Settings className="w-5 h-5" />
+            </Link>
+            <button className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              <Bell className="w-5 h-5" />
+            </button>
+            <Link href="/profile" className="hidden md:block w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm hover:ring-2 hover:ring-[#0077b6] dark:hover:ring-[#38bdf8] transition-all">
+              <img src={profile.avatarUrl} alt="User" className="w-full h-full object-cover" />
+            </Link>
+          </>
+        ) : (
+          <Link href="/login" className="bg-[#0077b6] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-[#005f92] transition-colors">
+            Sign In
+          </Link>
+        )}
       </div>
     </header>
   );

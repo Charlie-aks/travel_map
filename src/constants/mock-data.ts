@@ -1,5 +1,14 @@
 export type Category = 'All' | 'Beaches' | 'Dining' | 'Stay' | 'Cultural';
 
+export interface Review {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+  avatarUrl?: string;
+}
+
 export interface Location {
   id: string;
   name: string;
@@ -7,6 +16,7 @@ export interface Location {
   category: Category;
   rating: number;
   reviewsCount: string;
+  reviews?: Review[];
   distance: string;
   lat: number;
   lng: number;

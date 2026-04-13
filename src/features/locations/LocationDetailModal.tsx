@@ -7,6 +7,7 @@ import { Star, MapPin, Share, Heart, Clock, Ticket, Phone, Compass, Sun, Waves, 
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
 import { CurrentWeatherVibe } from "./CurrentWeatherVibe";
+import { LocationReviews } from "./LocationReviews";
 
 export function LocationDetailModal() {
   const router = useRouter();
@@ -110,6 +111,8 @@ export function LocationDetailModal() {
                 ))}
               </div>
             </section>
+
+            <LocationReviews location={selectedLocation} />
           </div>
 
           {/* Right Column: Sticky Sidebar */}

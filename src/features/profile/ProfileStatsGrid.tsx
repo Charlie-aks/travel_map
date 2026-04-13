@@ -34,7 +34,7 @@ export function ProfileStatsGrid() {
     { 
       id: 'miles', 
       icon: <Gauge className="w-5 h-5 shrink-0" />, 
-      value: profile.stats.milesTraveled.toLocaleString(), 
+      value: profile.stats.milesTraveled.toLocaleString('en-US'), 
       label: t.profile.milesTraveled, 
       color: "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400 border-amber-100/50 dark:border-amber-800/50" 
     },

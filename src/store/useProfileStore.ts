@@ -38,17 +38,22 @@ export interface UserProfile {
 
 interface ProfileState {
   profile: UserProfile;
+  isAuthenticated: boolean;
+  login: (name: string, email?: string) => void;
+  logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   unlockBadge: (badgeId: string) => void;
+  incrementBadgeProgress: (badgeId: string, amount?: number) => void;
+  incrementStat: (statKey: keyof UserProfile['stats'], amount?: number) => void;
   addXp: (amount: number) => void;
 }
 
 const defaultProfile: UserProfile = {
-  fullName: 'Alex Nguyen',
+  fullName: 'Khách du lịch ẩn danh',
   bio: 'Chasing sunsets from Mui Ne to Ke Ga. Digital nomad with a passion for authentic seafood and hidden beach coves.',
   hometown: 'Phan Thiet, Binh Thuan',
   website: 'alex.travels',
-  avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80',
+  avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
   level: {
     current: 12,
     titleKey: 'ambassador',
@@ -75,6 +80,8 @@ const defaultProfile: UserProfile = {
     { id: 'sunriseHunter', category: 'special', unlocked: false, progress: 0, target: 1, icon: '🌅' },
     { id: 'islandHopper', category: 'exploration', unlocked: false, progress: 1, target: 3, icon: '🚢' },
     { id: 'duneClimber', category: 'exploration', unlocked: false, progress: 2, target: 4, icon: '🏜️' },
+    { id: 'explorer', category: 'exploration', unlocked: false, progress: 3, target: 10, icon: '🗺️' },
+    { id: 'guide', category: 'contribution', unlocked: false, progress: 0, target: 5, icon: '🧭' },
   ]
 };
 
@@ -82,6 +89,15 @@ export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
       profile: defaultProfile,
+      isAuthenticated: false,
+      login: (name, email) => set((state) => ({
+        isAuthenticated: true,
+        profile: { ...state.profile, fullName: name }
+      })),
+      logout: () => set((state) => ({
+        isAuthenticated: false,
+        profile: { ...defaultProfile }
+      })),
       updateProfile: (data) => 
         set((state) => ({ 
           profile: { ...state.profile, ...data } 
@@ -94,6 +110,31 @@ export const useProfileStore = create<ProfileState>()(
               b.id === badgeId ? { ...b, unlocked: true, unlockedAt: new Date().toISOString().split('T')[0] } : b
             )
           }
+        })),
+      incrementBadgeProgress: (badgeId, amount = 1) =>
+        set((state) => {
+          const badges = state.profile.badges.map((b) => {
+            if (b.id !== badgeId || b.unlocked) return b;
+            const newProgress = Math.min(b.progress + amount, b.target);
+            const isNowUnlocked = newProgress >= b.target;
+            return {
+              ...b,
+              progress: newProgress,
+              unlocked: isNowUnlocked,
+              ...(isNowUnlocked ? { unlockedAt: new Date().toISOString().split('T')[0] } : {})
+            };
+          });
+          return { profile: { ...state.profile, badges } };
+        }),
+      incrementStat: (statKey, amount = 1) => 
+        set((state) => ({
+           profile: {
+              ...state.profile,
+              stats: {
+                 ...state.profile.stats,
+                 [statKey]: state.profile.stats[statKey] + amount
+              }
+           }
         })),
       addXp: (amount) =>
         set((state) => {

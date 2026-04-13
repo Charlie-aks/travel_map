@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Category, Location } from '../constants/mock-data';
+import { Category, Location, Review } from '../constants/mock-data';
+import { parseReviewsCount, formatReviewsCount } from '../lib/utils';
+import { useProfileStore } from './useProfileStore';
 
 interface LocationState {
   selectedLocation: Location | null;
@@ -21,6 +23,7 @@ interface LocationState {
   addLocation: (location: Omit<Location, 'id'> | Location) => Promise<void>;
   updateLocation: (id: string, updatedData: Partial<Location>) => Promise<void>;
   deleteLocation: (id: string) => Promise<void>;
+  addReview: (locationId: string, review: Omit<Review, 'id' | 'date'>) => Promise<void>;
   
   savedLocationIds: string[];
   toggleSaveLocation: (id: string) => void;
@@ -77,6 +80,13 @@ export const useLocationStore = create<LocationState>()(
           if (!res.ok) throw new Error('Failed to add location');
           const newLocation = await res.json();
           set((state) => ({ locations: [newLocation, ...state.locations], isLoading: false }));
+          
+          // Achievements
+          const profileState = useProfileStore.getState();
+          profileState.incrementStat('spots', 1);
+          profileState.incrementBadgeProgress('builder', 1);
+          profileState.incrementBadgeProgress('guide', 1);
+          profileState.addXp(50);
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
         }
@@ -116,12 +126,66 @@ export const useLocationStore = create<LocationState>()(
         }
       },
 
+      addReview: async (locationId, reviewData) => {
+        const { locations, updateLocation, selectedLocation } = get();
+        const location = locations.find(loc => loc.id === locationId);
+        if (!location) return;
+
+        const newReview: Review = {
+          ...reviewData,
+          id: crypto.randomUUID(),
+          date: new Date().toISOString()
+        };
+
+        const existingReviews = location.reviews || [];
+        const newReviews = [newReview, ...existingReviews];
+        
+        let newRating = location.rating;
+        if (newReviews.length > 0) {
+          const totalRating = newReviews.reduce((sum, r) => sum + r.rating, 0);
+          newRating = Number((totalRating / newReviews.length).toFixed(1));
+        }
+
+        const numericCount = parseReviewsCount(location.reviewsCount);
+        const newCountStr = formatReviewsCount(numericCount + 1);
+
+        // Update the location remotely
+        await updateLocation(locationId, {
+          reviews: newReviews,
+          rating: newRating,
+          reviewsCount: newCountStr
+        });
+        
+        // Update selectedLocation explicitly so UI catches it if it doesn't from locations
+        const freshState = get();
+        if (freshState.selectedLocation?.id === locationId) {
+          const updatedLoc = freshState.locations.find(loc => loc.id === locationId);
+          if (updatedLoc) {
+            set({ selectedLocation: updatedLoc });
+          }
+        }
+
+        // Achievements
+        const profileState = useProfileStore.getState();
+        profileState.incrementStat('reviews', 1);
+        profileState.incrementBadgeProgress('explorer', 1);
+        profileState.addXp(20);
+      },
+
       savedLocationIds: ['1', '2', '3'], 
-      toggleSaveLocation: (id) => set((state) => ({
-        savedLocationIds: state.savedLocationIds.includes(id) 
-          ? state.savedLocationIds.filter(savedId => savedId !== id)
-          : [...state.savedLocationIds, id]
-      })),
+      toggleSaveLocation: (id) => set((state) => {
+        const isCurrentlySaved = state.savedLocationIds.includes(id);
+        if (!isCurrentlySaved) {
+          const profileState = useProfileStore.getState();
+          profileState.incrementBadgeProgress('explorer', 1);
+          profileState.addXp(5);
+        }
+        return {
+          savedLocationIds: isCurrentlySaved 
+            ? state.savedLocationIds.filter(savedId => savedId !== id)
+            : [...state.savedLocationIds, id]
+        };
+      }),
       routingDestination: null,
       setRoutingDestination: (location) => set({ routingDestination: location }),
     }),

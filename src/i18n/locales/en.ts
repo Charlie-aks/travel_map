@@ -81,6 +81,8 @@ export const en = {
       sunriseHunter: { name: "Sunrise Hunter", desc: "Check-in at White Sand Dunes before 6:00 AM" },
       islandHopper: { name: "Island Hopper", desc: "Explore 3 islands in Binh Thuan" },
       duneClimber: { name: "Dune Climber", desc: "Conquer 4 famous sand dune areas" },
+      explorer: { name: "Explorer", desc: "Check-in or save 10 different locations" },
+      guide: { name: "Local Guide", desc: "Add 5 new locations to the map" },
     },
     levels: {
       newcomer: "Newcomer",

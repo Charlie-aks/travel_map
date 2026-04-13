@@ -3,8 +3,9 @@
 import { useTranslation } from "@/i18n/useTranslation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Map as MapIcon, MessageSquare, Clock, Globe, ArrowRight } from "lucide-react";
+import { Heart, Map as MapIcon, MessageSquare, Clock, Globe, ArrowRight, Star } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
+import { useLocationStore } from "@/store/useLocationStore";
 
 type TabType = 'saved' | 'map' | 'reviews' | 'activities';
 
@@ -62,26 +63,77 @@ export function ProfileContentTabs() {
 
 function SavedPlacesTab() {
   const { t } = useTranslation();
-  // Mock saved places
-  const savedItems = [
-    { id: 1, name: 'Mui Ne Beach', category: 'Nature', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400' },
-    { id: 2, name: 'Cham Towers', category: 'Culture', img: 'https://images.unsplash.com/photo-1598214815403-9c86466f3630?w=400' },
-    { id: 3, name: 'Red Sand Dunes', category: 'Nature', img: 'https://images.unsplash.com/photo-1596402184320-417d7178b2cd?w=400' },
-  ];
+  const { savedLocationIds, locations, toggleSaveLocation, setSelectedLocation, setDetailModalOpen } = useLocationStore();
+  
+  const savedItems = locations.filter(loc => savedLocationIds.includes(loc.id));
+
+  if (savedItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Heart className="w-12 h-12 text-slate-200 dark:text-slate-700 mb-4" />
+        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">No saved locations yet.</p>
+        <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Explore the map and heart places you love!</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {savedItems.map((item) => (
-        <div key={item.id} className="group relative bg-slate-50 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 transition-all hover:scale-[1.02] hover:shadow-lg">
-          <div className="h-40 overflow-hidden relative">
-            <img src={item.img} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-            <button className="absolute top-3 right-3 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full p-2 text-white border border-white/30 transition-all">
-              <Heart className="w-4 h-4 fill-white" />
-            </button>
-          </div>
-          <div className="p-4">
-            <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-1">{item.name}</h4>
-            <span className="text-[10px] font-bold text-[#0077b6] dark:text-[#38bdf8] uppercase tracking-widest">{item.category}</span>
+      {savedItems.map((location) => (
+        <div 
+          key={location.id} 
+          onClick={() => {
+            setSelectedLocation(location);
+            setDetailModalOpen(true);
+          }}
+          className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
+        >
+          {/* Background Image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={location.imageUrl} 
+            alt={location.name} 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 transition-opacity duration-500 group-hover:opacity-90"></div>
+
+          {/* Content Container */}
+          <div className="absolute inset-0 p-6 flex flex-col justify-between">
+            {/* Top Container: Tag + Heart */}
+            <div className="flex justify-between items-start">
+              <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-extrabold tracking-wider uppercase px-4 py-1.5 rounded-full shadow-sm">
+                {location.category}
+              </span>
+              <button 
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSaveLocation(location.id);
+                  }}
+                  className="bg-white/20 hover:bg-rose-500/80 backdrop-blur-md rounded-full p-2.5 text-white border border-white/30 transition-all hover:border-transparent"
+              >
+                <Heart className="w-4 h-4 fill-white" />
+              </button>
+            </div>
+
+            {/* Bottom Content */}
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h3 className="font-extrabold text-2xl text-white mb-2 leading-tight drop-shadow-md line-clamp-2">
+                  {location.name}
+                </h3>
+                <p className="text-slate-200 font-medium text-xs flex items-center gap-2">
+                  {location.distance} <span className="w-1 h-1 bg-slate-400 rounded-full"></span> Mui Ne Area
+                </p>
+              </div>
+              
+              {/* Rating floating tag */}
+              <div className="bg-white text-slate-800 font-bold text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl shrink-0 translate-y-1">
+                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                {location.rating}
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -104,27 +156,71 @@ function MyMapTab() {
 }
 
 function ReviewsPhotosTab() {
-  const reviews = [
-    { id: 1, title: 'Amazing sunset!', body: 'Best place to see the sunset in Mui Ne. Definitely worth it.', date: '2 days ago', rating: 5 },
-    { id: 2, title: 'Good seafood', body: 'Local catch was fresh but a bit pricey.', date: '1 week ago', rating: 4 },
-  ];
+  const { locations, setSelectedLocation, setDetailModalOpen } = useLocationStore();
+
+  const allReviews = locations.flatMap((loc) => {
+    if (!loc.reviews) return [];
+    return loc.reviews.map((rev) => ({
+      ...rev,
+      location: loc,
+      locationName: loc.name,
+      bgImage: loc.imageUrl,
+    }));
+  });
+
+  allReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  if (allReviews.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <MessageSquare className="w-12 h-12 text-slate-200 dark:text-slate-700 mb-4" />
+        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">Bạn chưa có đánh giá nào.</p>
+        <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Hãy ghé thăm các địa điểm và chia sẻ cảm nhận của bạn nhé!</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {reviews.map((rev) => (
-         <div key={rev.id} className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors">
-           <div className="flex justify-between items-start mb-4">
-             <div>
-               <h4 className="text-sm font-black text-slate-800 dark:text-white transition-colors">{rev.title}</h4>
-               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 transition-colors uppercase tracking-widest">{rev.date}</p>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {allReviews.map((rev) => (
+         <div 
+           key={rev.id} 
+           onClick={() => {
+             setSelectedLocation(rev.location);
+             setDetailModalOpen(true);
+           }}
+           className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
+         >
+           {/* Background Image */}
+           <img src={rev.bgImage} alt={rev.locationName} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+           
+           {/* Gradient Overlay */}
+           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20 transition-opacity duration-500 group-hover:opacity-100"></div>
+
+           {/* Content Container */}
+           <div className="absolute inset-0 p-6 flex flex-col justify-between">
+             {/* Top Container: Location Tag + Rating */}
+             <div className="flex justify-between items-start gap-2">
+                <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-[10px] font-extrabold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm truncate">
+                  {rev.locationName}
+                </span>
+                <div className="flex gap-0.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full shrink-0">
+                   {[...Array(5)].map((_, i) => (
+                     <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-md' : 'text-slate-500/50 fill-transparent'}`} />
+                   ))}
+                </div>
              </div>
-             <div className="flex gap-1">
-               {[...Array(5)].map((_, i) => (
-                 <div key={i} className={`w-3 h-3 rounded-full ${i < rev.rating ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'bg-slate-200 dark:bg-slate-700'}`} />
-               ))}
+
+             {/* Bottom Content: Review Text */}
+             <div>
+                <h4 className="text-white font-extrabold text-xl leading-tight mb-2 line-clamp-1 drop-shadow-md">{rev.userName}</h4>
+                <p className="text-slate-200 text-sm font-medium leading-relaxed line-clamp-3 mb-3">{rev.comment}</p>
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                  <MessageSquare className="w-3 h-3" />
+                  {new Date(rev.date).toLocaleDateString('vi-VN')}
+                </div>
              </div>
            </div>
-           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium transition-colors">{rev.body}</p>
          </div>
       ))}
     </div>

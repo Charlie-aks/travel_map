@@ -81,6 +81,8 @@ export const vi = {
       sunriseHunter: { name: "Săn bình minh", desc: "Check-in tại Đồi Cát Trắng trước 6:00 AM" },
       islandHopper: { name: "Đảo chủ", desc: "Khám phá 3 hòn đảo tại Bình Thuận" },
       duneClimber: { name: "Vua đồi cát", desc: "Chinh phục 4 khu vực đồi cát nổi tiếng" },
+      explorer: { name: "Người khám phá", desc: "Đánh dấu Check-in 10 địa điểm" },
+      guide: { name: "Hướng dẫn viên", desc: "Thêm 5 địa điểm mới lên bản đồ" },
     },
     levels: {
       newcomer: "Người mới",
