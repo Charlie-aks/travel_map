@@ -3,6 +3,8 @@ import { db } from '@/db';
 import { locations } from '@/db/schema';
 import { Location } from '@/constants/mock-data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const allLocations = await db.select().from(locations);
