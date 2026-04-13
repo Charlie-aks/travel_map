@@ -10,7 +10,7 @@ export default function TipsSidebar() {
   const { t } = useTranslation();
 
   return (
-    <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 sticky top-24 pt-6 md:pt-0">
+    <div className="w-full lg:w-[380px] shrink-0 static lg:sticky lg:top-24 pt-4 md:pt-0 pb-8 md:pb-0">
       
       {/* Header */}
       <div className="mb-8">

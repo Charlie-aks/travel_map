@@ -72,7 +72,7 @@ export default function AddLocationForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 max-w-3xl mx-auto md:ml-0 transition-colors">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 max-w-3xl mx-auto md:ml-0 transition-colors">
       
       {/* 1. Location Identity */}
       <section className="mb-10">
@@ -179,19 +179,19 @@ export default function AddLocationForm() {
       </section>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-4 pt-4">
+      <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 sm:gap-4 pt-4">
         <button 
           onClick={() => {
             reset();
             router.push("/");
           }}
-          className="text-slate-500 dark:text-slate-400 font-semibold text-sm hover:text-slate-800 dark:hover:text-slate-200 transition-colors px-4 py-2"
+          className="w-full sm:w-auto text-slate-500 dark:text-slate-400 font-semibold text-sm hover:text-slate-800 dark:hover:text-slate-200 transition-colors px-4 py-3 sm:py-2 text-center"
         >
           {t.addLocationForm.cancel}
         </button>
         <button 
           onClick={handlePublish}
-          className="bg-[#0077b6] hover:bg-[#005f92] dark:bg-[#38bdf8] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-md transition-colors"
+          className="w-full sm:w-auto bg-[#0077b6] hover:bg-[#005f92] dark:bg-[#38bdf8] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-md transition-colors text-center"
         >
           {editingId ? "Update Location" : t.addLocationForm.publishLocation}
         </button>
