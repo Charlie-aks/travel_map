@@ -2,8 +2,8 @@
 
 import { useLocationStore } from "@/store/useLocationStore";
 import { useAddLocationStore } from "@/store/useAddLocationStore";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { Star, MapPin, Share, Heart, Clock, Ticket, Phone, Compass, Sun, Waves, Camera, Utensils, Edit3 } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Star, MapPin, Share, Heart, Clock, Ticket, Phone, Compass, Sun, Waves, Camera, Utensils, Edit3, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
 import { CurrentWeatherVibe } from "./CurrentWeatherVibe";
@@ -28,11 +28,17 @@ export function LocationDetailModal() {
 
   return (
     <Sheet open={isDetailModalOpen} onOpenChange={setDetailModalOpen}>
-      <SheetContent side="right" className="w-[95vw] md:min-w-[70vw] lg:min-w-[60vw] max-w-[95vw] p-0 overflow-hidden bg-[#f8fafc] dark:bg-slate-950 overflow-y-auto custom-scrollbar border-0 rounded-l-xl shadow-2xl transition-colors" aria-describedby="dialog-description">
+      <SheetContent side="right" className="max-sm:w-full! max-sm:max-w-full! max-sm:rounded-none w-[95vw] md:min-w-[70vw] lg:min-w-[60vw] max-w-[95vw] p-0 overflow-hidden bg-[#f8fafc] dark:bg-slate-950 overflow-y-auto custom-scrollbar border-0 rounded-l-xl shadow-2xl transition-colors" aria-describedby="dialog-description">
         <SheetTitle className="sr-only">{selectedLocation.name}</SheetTitle>
         <SheetDescription id="dialog-description" className="sr-only">{selectedLocation.description}</SheetDescription>
         {/* 1. Hero Image Section */}
         <div className="relative w-full h-[400px]">
+          {/* Custom Close Button for Mobile Only */}
+          <SheetClose className="sm:hidden absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors border border-white/20">
+            <X className="w-5 h-5" />
+            <span className="sr-only">Close</span>
+          </SheetClose>
+
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={selectedLocation.imageUrl} 
@@ -42,7 +48,7 @@ export function LocationDetailModal() {
           <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
           
           {/* Hero Content */}
-          <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 text-white flex flex-col md:flex-row justify-between items-end gap-6">
+          <div className="absolute bottom-0 left-0 w-full p-5 sm:p-8 md:p-12 text-white flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
               <span className="bg-black/30 backdrop-blur-md text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-sm mb-4 inline-block">
                 {t.locationDetail.featuredDestination}
@@ -80,7 +86,7 @@ export function LocationDetailModal() {
         </div>
 
         {/* 2. Content Split Layout */}
-        <div className="p-8 md:p-12 flex flex-col lg:flex-row gap-12 max-w-[1200px] mx-auto">
+        <div className="p-5 sm:p-8 md:p-12 flex flex-col lg:flex-row gap-8 sm:gap-12 max-w-[1200px] mx-auto">
           
           {/* Left Column: Details */}
           <div className="flex-1">
