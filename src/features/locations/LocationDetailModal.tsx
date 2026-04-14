@@ -2,6 +2,7 @@
 
 import { useLocationStore } from "@/store/useLocationStore";
 import { useAddLocationStore } from "@/store/useAddLocationStore";
+import { useProfileStore } from "@/store/useProfileStore";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Star, MapPin, Share, Heart, Clock, Ticket, Phone, Compass, Sun, Waves, Camera, Utensils, Edit3, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ export function LocationDetailModal() {
   const router = useRouter();
   const { isDetailModalOpen, setDetailModalOpen, selectedLocation, savedLocationIds, toggleSaveLocation } = useLocationStore();
   const { loadLocation } = useAddLocationStore();
+  const { profile } = useProfileStore();
   const { t } = useTranslation();
 
   const handleEdit = () => {
@@ -194,22 +196,26 @@ export function LocationDetailModal() {
                   >
                     {t.locationDetail.openGoogleMaps}
                   </a>
-                  <button onClick={handleEdit} className="w-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
-                    <Edit3 className="w-4 h-4" /> {t.locationDetail.editSpot}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm(t.locationDetail.deleteConfirm)) {
-                        // @ts-ignore
-                        useLocationStore.getState().deleteLocation(selectedLocation.id);
-                        setDetailModalOpen(false);
-                      }
-                    }} 
-                    className="w-full mt-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                    {t.locationDetail.deleteSpot}
-                  </button>
+                  {profile.role === 'ADMIN' && (
+                    <>
+                      <button onClick={handleEdit} className="w-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                        <Edit3 className="w-4 h-4" /> {t.locationDetail.editSpot}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(t.locationDetail.deleteConfirm)) {
+                            // @ts-ignore
+                            useLocationStore.getState().deleteLocation(selectedLocation.id);
+                            setDetailModalOpen(false);
+                          }
+                        }} 
+                        className="w-full mt-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        {t.locationDetail.deleteSpot}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -11,6 +11,10 @@ export interface Badge {
   icon?: string;
 }
 
+export type Role = 'USER' | 'ADMIN';
+
+
+
 export interface UserProfile {
   fullName: string;
   bio: string;
@@ -34,12 +38,13 @@ export interface UserProfile {
   };
   coverUrl: string;
   badges: Badge[];
+  role: Role;
 }
 
 interface ProfileState {
   profile: UserProfile;
   isAuthenticated: boolean;
-  login: (name: string, email?: string) => void;
+  login: (name: string, email?: string, role?: Role) => void;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   unlockBadge: (badgeId: string) => void;
@@ -82,7 +87,8 @@ const defaultProfile: UserProfile = {
     { id: 'duneClimber', category: 'exploration', unlocked: false, progress: 2, target: 4, icon: '🏜️' },
     { id: 'explorer', category: 'exploration', unlocked: false, progress: 3, target: 10, icon: '🗺️' },
     { id: 'guide', category: 'contribution', unlocked: false, progress: 0, target: 5, icon: '🧭' },
-  ]
+  ],
+  role: 'USER',
 };
 
 export const useProfileStore = create<ProfileState>()(
@@ -90,9 +96,9 @@ export const useProfileStore = create<ProfileState>()(
     (set) => ({
       profile: defaultProfile,
       isAuthenticated: false,
-      login: (name, email) => set((state) => ({
+      login: (name, email, role = 'USER') => set((state) => ({
         isAuthenticated: true,
-        profile: { ...state.profile, fullName: name }
+        profile: { ...state.profile, fullName: name, role }
       })),
       logout: () => set((state) => ({
         isAuthenticated: false,

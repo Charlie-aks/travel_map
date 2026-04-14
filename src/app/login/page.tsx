@@ -3,20 +3,56 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useProfileStore } from '@/store/useProfileStore';
+import { useProfileStore, Role } from '@/store/useProfileStore';
+import { signIn, getSession } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useProfileStore(state => state.login);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    const name = email.split('@')[0] || "User";
-    // Simulate API request/auth
-    login(name, email);
-    router.push('/');
+    setError('');
+    
+    if (!email || !password) {
+      setError('Vui lòng nhập đầy đủ email và mật khẩu');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      });
+
+      if (res?.error) {
+        setError('Tài khoản không tồn tại hoặc sai mật khẩu');
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch latest session data from Database via NextAuth
+      const session = await getSession();
+      const user = session?.user as any;
+      
+      // Extract properties mapping Database to Zustand Store
+      const name = user?.name || email.split('@')[0] || "User";
+      const role = (user?.role as Role) || "USER";
+
+      login(name, email, role);
+      
+      router.push('/');
+    } catch (err) {
+      setError('Đã có lỗi xảy ra, vui lòng thử lại');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -87,10 +123,18 @@ export default function LoginPage() {
                 </div>
                 <input 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
                   className="w-full bg-[#f1f3f5] text-slate-800 px-4 py-3.5 rounded-xl border-none focus:ring-2 focus:ring-[#0077b6] outline-none transition-all placeholder:text-slate-400 tracking-widest font-black"
                 />
               </div>
+
+              {error && (
+                <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
 
               <div className="flex items-center gap-3 pt-1 pb-2">
                 <input 
@@ -105,9 +149,10 @@ export default function LoginPage() {
 
               <button 
                 type="submit" 
-                className="w-full bg-[#0077b6] hover:bg-[#005f92] text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_rgba(0,119,182,0.39)] transition-all transform hover:-translate-y-0.5 text-lg"
+                disabled={isLoading}
+                className="w-full bg-[#0077b6] hover:bg-[#005f92] disabled:opacity-70 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_rgba(0,119,182,0.39)] transition-all transform hover:-translate-y-0.5 text-lg"
               >
-                Sign In
+                {isLoading ? "Đang xử lý..." : "Sign In"}
               </button>
             </form>
 
