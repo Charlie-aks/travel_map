@@ -1,6 +1,4 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db";
@@ -11,8 +9,6 @@ import bcrypt from "bcryptjs";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db),
   providers: [
-    Google,
-    Facebook,
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
