@@ -14,7 +14,7 @@ export function Navbar() {
   const { t } = useTranslation();
   const profile = useProfileStore((state) => state.profile);
   const isAuthenticated = useProfileStore((state) => state.isAuthenticated);
-  const { fetchLocations, locations } = useLocationStore();
+  const { fetchLocations, locations, fetchSavedLocations } = useLocationStore();
 
   useEffect(() => {
     // Only fetch if empty to prevent re-fetching constantly, or just fetch once
@@ -22,6 +22,12 @@ export function Navbar() {
       fetchLocations();
     }
   }, [fetchLocations, locations.length]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSavedLocations();
+    }
+  }, [fetchSavedLocations, isAuthenticated]);
 
   if (pathname === '/register' || pathname === '/login') return null;
 

@@ -52,3 +52,11 @@ export const reviews = pgTable("review", {
   content: text("content"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
+
+export const savedLocations = pgTable("saved_location", {
+  userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  locationId: text("locationId").notNull().references(() => locations.id, { onDelete: "cascade" }),
+  savedAt: timestamp("savedAt").defaultNow(),
+}, (t) => ({
+  compoundKey: primaryKey({ columns: [t.userId, t.locationId] }),
+}));

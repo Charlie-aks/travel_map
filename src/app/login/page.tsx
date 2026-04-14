@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProfileStore, Role } from '@/store/useProfileStore';
+import { useLocationStore } from '@/store/useLocationStore';
 import { signIn, getSession } from 'next-auth/react';
 
 export default function LoginPage() {
@@ -48,6 +49,9 @@ export default function LoginPage() {
 
       login(name, email, role);
       
+      // Fetch user's saved locations right away
+      await useLocationStore.getState().fetchSavedLocations();
+
       router.push('/');
     } catch (err) {
       setError('Đã có lỗi xảy ra, vui lòng thử lại');

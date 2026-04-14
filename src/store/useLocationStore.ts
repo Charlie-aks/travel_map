@@ -26,7 +26,8 @@ interface LocationState {
   addReview: (locationId: string, review: Omit<Review, 'id' | 'date'>) => Promise<void>;
   
   savedLocationIds: string[];
-  toggleSaveLocation: (id: string) => void;
+  fetchSavedLocations: () => Promise<void>;
+  toggleSaveLocation: (id: string) => Promise<void>;
   routingDestination: Location | null;
   setRoutingDestination: (location: Location | null) => void;
 }
@@ -172,20 +173,64 @@ export const useLocationStore = create<LocationState>()(
         profileState.addXp(20);
       },
 
-      savedLocationIds: ['1', '2', '3'], 
-      toggleSaveLocation: (id) => set((state) => {
-        const isCurrentlySaved = state.savedLocationIds.includes(id);
-        if (!isCurrentlySaved) {
-          const profileState = useProfileStore.getState();
-          profileState.incrementBadgeProgress('explorer', 1);
-          profileState.addXp(5);
+      savedLocationIds: [], 
+      fetchSavedLocations: async () => {
+        try {
+          const res = await fetch('/api/locations/saved');
+          
+          if (res.status === 401) {
+            useProfileStore.getState().logout();
+            set({ savedLocationIds: [] });
+            return;
+          }
+
+          if (res.ok) {
+            const data = await res.json();
+            set({ savedLocationIds: data });
+          }
+        } catch (error) {
+          console.error("Error fetching saved locations:", error);
         }
-        return {
-          savedLocationIds: isCurrentlySaved 
-            ? state.savedLocationIds.filter(savedId => savedId !== id)
-            : [...state.savedLocationIds, id]
-        };
-      }),
+      },
+      toggleSaveLocation: async (id) => {
+        const authStore = useProfileStore.getState();
+        if (!authStore.isAuthenticated) {
+          alert('Vui lòng đăng nhập để lưu địa điểm!');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/locations/saved', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locationId: id })
+          });
+
+          if (res.status === 401) {
+            useProfileStore.getState().logout();
+            set({ savedLocationIds: [] });
+            alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để lưu địa điểm!');
+            return;
+          }
+
+          if (res.ok) {
+            const data = await res.json();
+            set((state) => ({
+              savedLocationIds: data.saved 
+                ? [...state.savedLocationIds, id]
+                : state.savedLocationIds.filter(savedId => savedId !== id)
+            }));
+
+            if (data.saved) {
+              const profileState = useProfileStore.getState();
+              profileState.incrementBadgeProgress('explorer', 1);
+              profileState.addXp(5);
+            }
+          }
+        } catch (error) {
+          console.error("Error toggling saved location:", error);
+        }
+      },
       routingDestination: null,
       setRoutingDestination: (location) => set({ routingDestination: location }),
     }),
