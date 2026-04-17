@@ -1,7 +1,18 @@
 import Link from "next/link";
 import { Search, Bell, HelpCircle, LayoutDashboard, MapPin, Users, FileText, Settings } from "lucide-react";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = "force-dynamic";
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
+  // If there's no session, no user, or the role is not ADMIN, redirect out.
+  if ((session?.user as any)?.role !== "ADMIN") {
+    redirect("/");
+  }
+
   return (
     <div className="flex h-screen bg-[#f7f8f9] font-sans text-slate-900 overflow-hidden">
       {/* Sidebar */}

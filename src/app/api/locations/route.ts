@@ -9,23 +9,50 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const allLocations = await db.select().from(locations).where(eq(locations.status, 'APPROVED'));
+    const allLocations = await db.query.locations.findMany({
+      where: eq(locations.status, 'APPROVED'),
+      with: {
+        reviews: {
+          where: (reviews, { eq }) => eq(reviews.status, 'PUBLISHED'),
+          with: {
+            author: true
+          }
+        }
+      }
+    });
     
     // Map DB schema to UI expected mock-data schema to prevent breaking changes
     const mappedLocations = allLocations.map(loc => {
       const coords = (loc.coordinates as [number, number]) || [0, 0];
+      
+      // Calculate real rating and reviewsCount
+      const reviewList = loc.reviews || [];
+      const rating = reviewList.length > 0 
+        ? Number((reviewList.reduce((acc, r) => acc + r.rating, 0) / reviewList.length).toFixed(1))
+        : 5.0; // Default rating if no reviews
+      
+      const reviewsCount = reviewList.length > 0 ? `${reviewList.length}` : 'New';
+
       return {
         id: loc.id,
         name: loc.title,
         description: loc.description || '',
-        category: loc.category as any, // casting to Category
-        rating: 4.5, // placeholder
-        reviewsCount: 'New', 
+        category: loc.category as any,
+        rating,
+        reviewsCount,
         distance: 'Local',
         lat: coords[0] || 0,
         lng: coords[1] || 0,
         imageUrl: loc.imageUrl,
-        address: 'No Address', // placeholder
+        address: 'No Address',
+        reviews: reviewList.map(r => ({
+          id: r.id,
+          userName: r.isAnonymous ? "Người dùng ẩn danh" : (r.author?.name || "Khách du lịch"),
+          rating: r.rating,
+          comment: r.content || "",
+          date: r.createdAt?.toISOString() || new Date().toISOString(),
+          avatarUrl: r.isAnonymous ? undefined : (r.author?.image || undefined)
+        }))
       };
     });
 

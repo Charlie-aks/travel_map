@@ -50,6 +50,8 @@ export const reviews = pgTable("review", {
   authorId: text("authorId").notNull().references(() => users.id),
   rating: integer("rating").notNull(),
   content: text("content"),
+  status: text("status").default("PUBLISHED"),
+  isAnonymous: boolean("isAnonymous").default(false),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 

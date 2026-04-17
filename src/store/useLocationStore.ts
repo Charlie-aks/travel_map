@@ -128,49 +128,44 @@ export const useLocationStore = create<LocationState>()(
       },
 
       addReview: async (locationId, reviewData) => {
-        const { locations, updateLocation, selectedLocation } = get();
-        const location = locations.find(loc => loc.id === locationId);
-        if (!location) return;
+        set({ isLoading: true, error: null });
+        try {
+          const res = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              locationId,
+              rating: reviewData.rating,
+              content: reviewData.comment,
+              isAnonymous: (reviewData as any).isAnonymous || false,
+            }),
+          });
 
-        const newReview: Review = {
-          ...reviewData,
-          id: crypto.randomUUID(),
-          date: new Date().toISOString()
-        };
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Failed to post review');
+          }
 
-        const existingReviews = location.reviews || [];
-        const newReviews = [newReview, ...existingReviews];
-        
-        let newRating = location.rating;
-        if (newReviews.length > 0) {
-          const totalRating = newReviews.reduce((sum, r) => sum + r.rating, 0);
-          newRating = Number((totalRating / newReviews.length).toFixed(1));
-        }
+          // Force re-fetch locations to get updated ratings and reviews
+          const { fetchLocations } = get();
+          await fetchLocations();
 
-        const numericCount = parseReviewsCount(location.reviewsCount);
-        const newCountStr = formatReviewsCount(numericCount + 1);
-
-        // Update the location remotely
-        await updateLocation(locationId, {
-          reviews: newReviews,
-          rating: newRating,
-          reviewsCount: newCountStr
-        });
-        
-        // Update selectedLocation explicitly so UI catches it if it doesn't from locations
-        const freshState = get();
-        if (freshState.selectedLocation?.id === locationId) {
-          const updatedLoc = freshState.locations.find(loc => loc.id === locationId);
+          // Update selectedLocation to reflect new reviews/rating in Modal
+          const freshLocations = get().locations;
+          const updatedLoc = freshLocations.find(l => l.id === locationId);
           if (updatedLoc) {
             set({ selectedLocation: updatedLoc });
           }
-        }
 
-        // Achievements
-        const profileState = useProfileStore.getState();
-        profileState.incrementStat('reviews', 1);
-        profileState.incrementBadgeProgress('explorer', 1);
-        profileState.addXp(20);
+          // Achievements
+          const profileState = useProfileStore.getState();
+          profileState.incrementStat('reviews', 1);
+          profileState.incrementBadgeProgress('explorer', 1);
+          profileState.addXp(20);
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          alert(error.message);
+        }
       },
 
       savedLocationIds: [], 

@@ -47,9 +47,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     };
 
     return NextResponse.json(responseLocation);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to update location:", error);
-    return NextResponse.json({ error: "Failed to update location" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to update location",
+      details: error.message 
+    }, { status: 500 });
   }
 }
 
