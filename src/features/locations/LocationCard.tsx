@@ -11,6 +11,8 @@ interface LocationCardProps {
   showDelete?: boolean;
 }
 
+import { coastalTheme, cn } from "@/components/ui/design-system";
+
 export function LocationCard({ location, showDelete = false }: LocationCardProps) {
   const { selectedLocation, setSelectedLocation, setDetailModalOpen, deleteLocation, savedLocationIds, toggleSaveLocation } = useLocationStore();
   const isSelected = selectedLocation?.id === location.id;
@@ -25,18 +27,18 @@ export function LocationCard({ location, showDelete = false }: LocationCardProps
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      variants={coastalTheme.animations.itemFadeUp}
       whileHover={{ y: -4 }}
       className="mb-6 w-full"
     >
       <div 
-        className={`bg-white dark:bg-slate-900 rounded-2xl overflow-hidden cursor-pointer flex flex-col transition-all duration-300 ${
+        className={cn(
+          "rounded-2xl overflow-hidden cursor-pointer flex flex-col transition-all duration-300",
           isSelected 
-            ? "ring-2 ring-[#0077b6] dark:ring-[#38bdf8] shadow-xl" 
-            : "border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
-        }`}
+            ? "ring-2 ring-primary shadow-xl" 
+            : "border border-slate-100 dark:border-slate-800",
+          coastalTheme.glassmorphism
+        )}
         onClick={() => setSelectedLocation(location)}
       >
         {/* Location Image */}
@@ -74,14 +76,14 @@ export function LocationCard({ location, showDelete = false }: LocationCardProps
               {location.description}
             </p>
           </div>
-         {/* Action Button */}
+          {/* Action Button */}
         <div className="mt-5 flex items-center gap-2">
           <button 
             onClick={() => {
               setSelectedLocation(location);
               setDetailModalOpen(true);
             }}
-            className="flex-1 bg-[#0077b6] dark:bg-[#38bdf8] hover:bg-[#005f92] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+            className="flex-1 bg-primary hover:opacity-90 text-primary-foreground py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-1.5 shadow-sm"
           >
             {t.locationCard.viewDetails}
           </button>

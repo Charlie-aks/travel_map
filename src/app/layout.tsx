@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { LocationDetailModal } from "@/features/locations/LocationDetailModal";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { CommandMenu } from "@/components/layout/CommandMenu";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <LocationDetailModal />
+          <CommandMenu />
         </ThemeProvider>
       </body>
     </html>

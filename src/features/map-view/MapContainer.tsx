@@ -18,8 +18,8 @@ L.Icon.Default.mergeOptions({
 
 const createCustomIcon = (isSelected: boolean) => {
   const iconHtml = ReactDOMServer.renderToString(
-    <div className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg transition-transform ${isSelected ? 'bg-blue-600 scale-125 z-50' : 'bg-white text-blue-600'}`}>
-      <MapPin className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-blue-600'}`} fill={isSelected ? '#2563eb' : 'none'} />
+    <div className={`relative flex items-center justify-center w-8 h-8 rounded-full shadow-lg transition-transform duration-300 ${isSelected ? 'bg-primary scale-125 z-50 ring-4 ring-primary/30' : 'bg-white text-primary hover:scale-110'}`}>
+      <MapPin className={`w-5 h-5 ${isSelected ? 'text-primary-foreground' : 'text-primary'}`} fill={isSelected ? 'currentColor' : 'none'} />
     </div>
   );
 
@@ -74,11 +74,11 @@ function RoutingControl() {
 
   return (
     <>
-      <Polyline positions={routePath} color="#0077b6" weight={6} opacity={0.8} dashArray="10, 10" />
+      <Polyline positions={routePath} color="#1e40af" weight={6} opacity={0.8} dashArray="10, 10" />
       
       {/* Start Point Marker */}
       <Marker position={[10.9333, 108.1000]} icon={L.divIcon({
-        html: `<div class="w-4 h-4 bg-[#0077b6] rounded-full border-2 border-white shadow-md"></div>`,
+        html: `<div class="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-md"></div>`,
         className: "",
         iconSize: [16, 16],
         iconAnchor: [8, 8]
@@ -119,11 +119,11 @@ export default function CustomMapContainer() {
           <div className="bg-white dark:bg-slate-900 px-5 py-3 rounded-full shadow-lg border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
             <div className="flex flex-col items-start mr-4 max-w-[150px] md:max-w-xs">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1 transition-colors">{t.map.routingTo}</span>
-              <span className="text-sm font-bold text-[#0077b6] dark:text-[#38bdf8] whitespace-nowrap overflow-hidden text-ellipsis w-full transition-colors">{routingDestination.name}</span>
+              <span className="text-sm font-bold text-primary whitespace-nowrap overflow-hidden text-ellipsis w-full transition-colors">{routingDestination.name}</span>
             </div>
             <button 
               onClick={() => setRoutingDestination(null)}
-              className="bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
+              className="bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-destructive px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
             >
               {t.map.cancel}
             </button>

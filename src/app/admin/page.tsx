@@ -1,4 +1,5 @@
 import { Plus, TrendingUp, MapPin, Users, AlertTriangle, ChevronDown, FileText } from "lucide-react";
+import { VisitorChart } from "./components/VisitorChart";
 
 export default function AdminDashboard() {
   return (
@@ -95,14 +96,8 @@ export default function AdminDashboard() {
               Last 30 Days <ChevronDown className="w-4 h-4 ml-0.5" />
             </button>
           </div>
-          {/* Placeholder for chart */}
-          <div className="flex-1 flex items-end justify-between px-6 pb-2">
-            <span className="text-[10px] font-black text-slate-300">MAY</span>
-            <span className="text-[10px] font-black text-slate-300">JUN</span>
-            <span className="text-[10px] font-black text-slate-300">JUL</span>
-            <span className="text-[10px] font-black text-slate-300">AUG</span>
-            <span className="text-[10px] font-black text-slate-300">SEP</span>
-            <span className="text-[10px] font-black text-[#006e9b]">OCT</span>
+          <div className="flex-1 w-full relative">
+            <VisitorChart />
           </div>
         </div>
 

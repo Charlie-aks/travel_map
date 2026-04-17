@@ -11,6 +11,8 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { LocationCard } from "./LocationCard";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "@/components/ui/drawer";
 import { useTranslation } from "@/i18n/useTranslation";
+import { motion } from "framer-motion";
+import { coastalTheme, cn } from "@/components/ui/design-system";
 
 const categories: Category[] = ["All", "Beaches", "Dining", "Stay", "Cultural"];
 
@@ -94,9 +96,15 @@ export function Sidebar() {
               </div>
             ))
           ) : locations.length > 0 ? (
-            locations.map((loc) => (
-              <LocationCard key={loc.id} location={loc} />
-            ))
+            <motion.div 
+              variants={coastalTheme.animations.staggerContainer}
+              initial="hidden"
+              animate="show"
+            >
+              {locations.map((loc) => (
+                <LocationCard key={loc.id} location={loc} />
+              ))}
+            </motion.div>
           ) : (
             <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-[15px] transition-colors">
               {t.map.noLocationsFound}
