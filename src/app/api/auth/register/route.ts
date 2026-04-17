@@ -7,12 +7,12 @@ import bcrypt from 'bcryptjs';
 export async function POST(req: Request) {
   try {
     const { name, email, password } = await req.json();
-
+    //kiểm tra tính đầy đủ(validation)
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if user already exists
+    // Kiểm tra user đã tồn tại
     const existingUsers = await db.select().from(users).where(eq(users.email, email)).limit(1);
     
     if (existingUsers.length > 0) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     // Hash the password securely
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);//mã hóa pass
 
     // Insert user into database
     await db.insert(users).values({

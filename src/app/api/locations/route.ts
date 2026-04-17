@@ -3,11 +3,13 @@ import { db } from '@/db';
 import { locations } from '@/db/schema';
 import { Location } from '@/constants/mock-data';
 
+import { eq } from 'drizzle-orm';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const allLocations = await db.select().from(locations);
+    const allLocations = await db.select().from(locations).where(eq(locations.status, 'APPROVED'));
     
     // Map DB schema to UI expected mock-data schema to prevent breaking changes
     const mappedLocations = allLocations.map(loc => {
@@ -45,7 +47,7 @@ export async function POST(req: Request) {
       description: data.description || '',
       imageUrl: data.imageUrl || '',
       category: data.category || 'All',
-      status: 'APPROVED',
+      status: 'PENDING',
     };
 
     const inserted = await db.insert(locations).values(newLocationData).returning();

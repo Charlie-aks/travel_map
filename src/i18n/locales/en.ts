@@ -144,7 +144,9 @@ export const en = {
     shortDescription: "Short Description",
     shortDescriptionPlaceholder: "Tell us why travelers should visit this spot...",
     cancel: "Cancel",
-    publishLocation: "Publish Location"
+    publishLocation: "Publish Location",
+    successTitle: "Submitted Successfully!",
+    pendingApproval: "Your location has been submitted and is pending admin approval. Thank you for contributing to our community!"
   },
   addLocation: {
     addNewSpot: "Add New Spot",

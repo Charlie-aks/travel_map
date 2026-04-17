@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useAddLocationStore } from "@/store/useAddLocationStore";
 import { useLocationStore } from "@/store/useLocationStore";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ export default function AddLocationForm() {
   const { t } = useTranslation();
   const { name, updateField, address, category, description, imageUrl, lat, lng, editingId, reset } = useAddLocationStore();
   const { addLocation, updateLocation } = useLocationStore();
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,42 +37,70 @@ export default function AddLocationForm() {
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!name || category === 'All' || !address || !description) {
       alert("Please fill out all required fields!");
       return;
     }
 
-    if (editingId) {
-      updateLocation(editingId, {
-        name,
-        category: category as Category,
-        address,
-        description,
-        lat,
-        lng,
-        imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
-      });
-    } else {
-      const newSpot: Location = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        category: category as Category,
-        address,
-        description,
-        lat,
-        lng,
-        imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
-        rating: 5.0, // default rating for new spot
-        reviewsCount: 'New',
-        distance: 'Just added',
-      };
-      addLocation(newSpot);
+    setIsSubmitting(true);
+    try {
+      if (editingId) {
+        await updateLocation(editingId, {
+          name,
+          category: category as Category,
+          address,
+          description,
+          lat,
+          lng,
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
+        });
+      } else {
+        const newSpot: Location = {
+          id: Math.random().toString(36).substr(2, 9),
+          name,
+          category: category as Category,
+          address,
+          description,
+          lat,
+          lng,
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
+          rating: 5.0, // default rating for new spot
+          reviewsCount: 'New',
+          distance: 'Just added',
+        };
+        await addLocation(newSpot);
+      }
+      setIsSubmitted(true);
+      reset(); // reset form state
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    reset(); // reset form state
-    router.push("/"); // navigate to map view
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 max-w-2xl mx-auto flex flex-col items-center text-center transition-colors">
+        <div className="w-20 h-20 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-full flex items-center justify-center mb-8">
+          <CheckCircle2 className="w-10 h-10" />
+        </div>
+        <h2 className="text-3xl font-black text-slate-800 dark:text-slate-50 mb-4 tracking-tight">
+          {t.addLocationForm.successTitle}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-10 leading-relaxed text-lg max-w-md">
+          {t.addLocationForm.pendingApproval}
+        </p>
+        <button 
+          onClick={() => router.push("/")}
+          className="bg-[#0077b6] hover:bg-[#005f92] dark:bg-[#38bdf8] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 px-10 py-4 rounded-full font-bold shadow-lg transition-all transform hover:scale-105"
+        >
+          {t.navbar.map}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-5 sm:p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-slate-800 max-w-3xl mx-auto md:ml-0 transition-colors">
@@ -190,10 +221,18 @@ export default function AddLocationForm() {
           {t.addLocationForm.cancel}
         </button>
         <button 
+          disabled={isSubmitting}
           onClick={handlePublish}
-          className="w-full sm:w-auto bg-[#0077b6] hover:bg-[#005f92] dark:bg-[#38bdf8] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-md transition-colors text-center"
+          className="w-full sm:w-auto bg-[#0077b6] hover:bg-[#005f92] dark:bg-[#38bdf8] dark:hover:bg-[#0284c7] text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed text-center min-w-[160px]"
         >
-          {editingId ? "Update Location" : t.addLocationForm.publishLocation}
+          {isSubmitting ? (
+             <div className="flex items-center justify-center gap-2">
+               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+               <span>{editingId ? "Updating..." : "Publishing..."}</span>
+             </div>
+          ) : (
+            editingId ? "Update Location" : t.addLocationForm.publishLocation
+          )}
         </button>
       </div>
 

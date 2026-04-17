@@ -29,7 +29,7 @@ export function Navbar() {
     }
   }, [fetchSavedLocations, isAuthenticated]);
 
-  if (pathname === '/register' || pathname === '/login') return null;
+  if (pathname === '/register' || pathname === '/login' || pathname.startsWith('/admin')) return null;
 
   const mainNav = [
     { href: '/', label: t.navbar.explore, icon: <Compass className="w-5 h-5" /> },

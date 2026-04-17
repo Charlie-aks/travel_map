@@ -144,7 +144,9 @@ export const vi = {
     shortDescription: "Mô tả ngắn",
     shortDescriptionPlaceholder: "Hãy cho chúng tôi biết tại sao du khách nên đến nơi này...",
     cancel: "Hủy",
-    publishLocation: "Đăng địa điểm"
+    publishLocation: "Đăng địa điểm",
+    successTitle: "Đã gửi thành công!",
+    pendingApproval: "Địa điểm của bạn đã được gửi và đang chờ quản trị viên xét duyệt. Cảm ơn đóng góp của bạn cho cộng đồng!"
   },
   addLocation: {
     addNewSpot: "Thêm điểm mới",

@@ -79,8 +79,8 @@ export const useLocationStore = create<LocationState>()(
             body: JSON.stringify(location),
           });
           if (!res.ok) throw new Error('Failed to add location');
-          const newLocation = await res.json();
-          set((state) => ({ locations: [newLocation, ...state.locations], isLoading: false }));
+          // Không thêm trực tiếp `newLocation` vào state.locations nữa vì cần đợi Admin duyệt
+          set({ isLoading: false });
           
           // Achievements
           const profileState = useProfileStore.getState();
