@@ -51,6 +51,7 @@ interface ProfileState {
   incrementBadgeProgress: (badgeId: string, amount?: number) => void;
   incrementStat: (statKey: keyof UserProfile['stats'], amount?: number) => void;
   addXp: (amount: number) => void;
+  fetchStats: () => Promise<void>;
 }
 
 const defaultProfile: UserProfile = {
@@ -161,6 +162,26 @@ export const useProfileStore = create<ProfileState>()(
             }
           };
         }),
+      fetchStats: async () => {
+        try {
+          const res = await fetch('/api/profile/stats');
+          if (!res.ok) return;
+          const data = await res.json();
+          
+          set((state) => ({
+            profile: {
+              ...state.profile,
+              stats: {
+                ...state.profile.stats,
+                reviews: data.reviews,
+                spots: data.spots,
+              }
+            }
+          }));
+        } catch (error) {
+          console.error("Failed to fetch stats in store:", error);
+        }
+      },
     }),
     {
       name: 'phan-thiet-profile-storage-v2', // version bump

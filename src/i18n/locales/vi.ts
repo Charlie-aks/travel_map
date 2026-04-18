@@ -8,7 +8,6 @@ export const vi = {
   },
   settingsSidebar: {
     profile: "Hồ sơ",
-    contributions: "Đóng góp của tôi",
     achievements: "Thành tựu",
     settings: "Cài đặt",
     account: "Tài khoản",
@@ -121,7 +120,6 @@ export const vi = {
     editProfile: "Sửa hồ sơ",
     shareProfile: "Chia sẻ",
     milesTraveled: "Quãng đường (Dặm)",
-    contributions: "Đóng góp",
     placesSaved: "Đã lưu",
     linkedAccounts: "Tài khoản liên kết",
     followingCount: "Đang theo dõi",

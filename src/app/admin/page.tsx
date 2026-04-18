@@ -1,7 +1,70 @@
-import { Plus, TrendingUp, MapPin, Users, AlertTriangle, ChevronDown, FileText } from "lucide-react";
+"use client";
+
+import { Plus, TrendingUp, MapPin, Users, AlertTriangle, ChevronDown, FileText, Loader2, Bookmark, MessageSquare, Star } from "lucide-react";
 import { VisitorChart } from "./components/VisitorChart";
+import { useState, useEffect } from "react";
+
+interface Activity {
+  id: string;
+  type: 'REVIEW' | 'LOCATION';
+  userName: string;
+  userImage?: string;
+  targetName: string;
+  time: string;
+  rating?: number;
+}
+
+interface OverviewData {
+  stats: {
+    totalUsers: number;
+    totalLocations: number;
+    totalSaves: number;
+    pendingReports: number;
+  };
+  activities: Activity[];
+}
 
 export default function AdminDashboard() {
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/overview");
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (error) {
+      console.error("Error fetching overview data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    if (!isMounted) return "";
+    const now = new Date();
+    const then = new Date(dateString);
+    const diffInMs = now.getTime() - then.getTime();
+    const diffInMins = Math.floor(diffInMs / 60000);
+    
+    if (diffInMins < 1) return "vừa xong";
+    if (diffInMins < 60) return `${diffInMins} phút trước`;
+    const diffInHours = Math.floor(diffInMins / 60);
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    return then.toLocaleDateString("vi-VN");
+  };
+
+  if (!isMounted) return null;
+
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
@@ -18,67 +81,68 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card 1 */}
+        {/* Card 1: Total Saves */}
         <div className="bg-white rounded-[1.25rem] p-7 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] flex flex-col justify-between h-[150px]">
           <div className="flex items-center justify-between">
             <div className="w-12 h-12 rounded-[0.9rem] bg-[#eef3fb] flex items-center justify-center text-[#3076cc]">
-              <TrendingUp className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div className="px-3 py-1.5 rounded-full bg-[#f1f6fd] text-[#3076cc] text-[11px] font-black">
-              +12.5%
+              <Bookmark className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Total Visitors</p>
-            <h3 className="text-3xl font-black text-[#0c2b48]">12.5k</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Total Saves</p>
+            <h3 className="text-3xl font-black text-[#0c2b48]">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin opacity-20" /> : (data?.stats.totalSaves || 0)}
+            </h3>
           </div>
         </div>
 
-        {/* Card 2 */}
+        {/* Card 2: New Locations */}
         <div className="bg-white rounded-[1.25rem] p-7 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] flex flex-col justify-between h-[150px]">
           <div className="flex items-center justify-between">
             <div className="w-12 h-12 rounded-[0.9rem] bg-[#f0ebd9] flex items-center justify-center text-[#6e744e]">
               <MapPin className="w-5 h-5 stroke-[2.5]" fill="currentColor" />
             </div>
-            <div className="px-3 py-1.5 rounded-full bg-[#f5f3e9] text-[#6e744e] text-[11px] font-black">
-              +4 this week
-            </div>
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">New Locations</p>
-            <h3 className="text-3xl font-black text-[#0c2b48]">45</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Locations</p>
+            <h3 className="text-3xl font-black text-[#0c2b48]">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin opacity-20" /> : (data?.stats.totalLocations || 0)}
+            </h3>
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 3: Active Users */}
         <div className="bg-white rounded-[1.25rem] p-7 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] flex flex-col justify-between h-[150px]">
           <div className="flex items-center justify-between">
             <div className="w-12 h-12 rounded-[0.9rem] bg-[#fcece3] flex items-center justify-center text-[#da7f47]">
               <Users className="w-5 h-5 stroke-[2.5]" fill="currentColor" />
             </div>
-            <div className="px-3 py-1.5 rounded-full bg-[#fef5f0] text-[#da7f47] text-[11px] font-black flex items-center gap-1.5">
-               Live Now
-            </div>
           </div>
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Active Users</p>
-            <h3 className="text-3xl font-black text-[#0c2b48]">1.2k</h3>
+            <h3 className="text-3xl font-black text-[#0c2b48]">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin opacity-20" /> : (data?.stats.totalUsers || 0)}
+            </h3>
           </div>
         </div>
 
-        {/* Card 4 */}
+        {/* Card 4: Pending Reports */}
         <div className="bg-white rounded-[1.25rem] p-7 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] flex flex-col justify-between h-[150px]">
           <div className="flex items-center justify-between">
             <div className="w-12 h-12 rounded-[0.9rem] bg-[#fde9e8] flex items-center justify-center text-[#d94f4a]">
               <AlertTriangle className="w-5 h-5 stroke-[2.5]" fill="currentColor" />
             </div>
-            <div className="px-3 py-1.5 rounded-full bg-[#fef0f0] text-[#d94f4a] text-[11px] font-black">
-              Urgent
-            </div>
+            {data?.stats.pendingReports ? data.stats.pendingReports > 0 && (
+              <div className="px-3 py-1.5 rounded-full bg-[#fef0f0] text-[#d94f4a] text-[11px] font-black animate-pulse">
+                Action Required
+              </div>
+            ) : null}
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Pending Reports</p>
-            <h3 className="text-3xl font-black text-[#0c2b48]">8</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Pending Approvals</p>
+            <h3 className="text-3xl font-black text-[#0c2b48]">
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin opacity-20" /> : (data?.stats.pendingReports || 0)}
+            </h3>
           </div>
         </div>
       </div>
@@ -106,64 +170,35 @@ export default function AdminDashboard() {
           <h2 className="text-xl font-bold text-[#0c2b48] mb-8">Recent Activities</h2>
           
           <div className="flex-1 space-y-7 relative before:absolute before:inset-0 before:ml-[19px] before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#e0e4eb] before:to-transparent">
-            {/* Activity Item 1 */}
-            <div className="relative flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full flex-shrink-0 relative z-10 shadow-sm overflow-hidden">
-                <img src="https://i.pravatar.cc/150?u=1" alt="Sarah J." className="w-full h-full object-cover" />
-              </div>
-              <div className="bg-transparent pt-0.5">
-                <p className="text-sm font-semibold text-slate-500 leading-tight">
-                  <span className="font-bold text-[#0c2b48]">Sarah J.</span> added <span className="font-bold text-[#0c2b48]">Mui Ne Dunes</span>
-                </p>
-                <p className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">2 Minutes Ago</p>
-                <div className="mt-2 w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5 text-slate-500" />
+            {isLoading ? (
+               <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+               </div>
+            ) : (data?.activities || []).map((activity) => (
+              <div key={activity.id} className="relative flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full flex-shrink-0 relative z-10 shadow-sm overflow-hidden bg-slate-200 border border-white">
+                  {activity.userImage ? (
+                    <img src={activity.userImage} alt={activity.userName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-black uppercase text-slate-400 bg-slate-100">
+                      {activity.userName.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="bg-transparent pt-0.5">
+                  <p className="text-sm font-semibold text-slate-500 leading-tight">
+                    <span className="font-bold text-[#0c2b48]">{activity.userName}</span> {activity.type === 'LOCATION' ? 'added' : 'reviewed'} <span className="font-bold text-[#0c2b48]">{activity.targetName}</span>
+                  </p>
+                  <p className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">{getTimeAgo(activity.time)}</p>
+                  <div className={`mt-2 w-7 h-7 rounded-full flex items-center justify-center ${activity.type === 'LOCATION' ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-blue-500'}`}>
+                      {activity.type === 'LOCATION' ? <MapPin className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Activity Item 2 */}
-            <div className="relative flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full flex-shrink-0 relative z-10 shadow-sm overflow-hidden bg-[#243545]">
-                 <img src="https://i.pravatar.cc/150?u=a042581f4e29026704b" alt="Mark" className="w-full h-full object-cover opacity-80 mix-blend-luminosity" />
-              </div>
-              <div className="pt-0.5">
-                <p className="text-sm font-semibold text-slate-500 leading-tight">
-                  <span className="font-bold text-[#0c2b48]">Mark L.</span> reviewed <span className="font-bold text-[#0c2b48]">Red Canyon</span>
-                </p>
-                <p className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">15 Minutes Ago</p>
-                <div className="mt-2 w-6 h-6 rounded-full bg-[#3076cc] flex items-center justify-center text-white">
-                    <span className="text-xs">★</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Item 3 */}
-            <div className="relative flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#d68545] flex-shrink-0 flex items-center justify-center text-white relative z-10 shadow-sm">
-                <FileText className="w-4 h-4 fill-white text-[#d68545]" />
-              </div>
-              <div className="pt-0.5">
-                <p className="text-sm font-semibold text-slate-500 leading-tight">
-                  <span className="font-bold text-[#0c2b48]">System</span> flagged <span className="font-bold text-[#0c2b48]">Content</span>
-                </p>
-                <p className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">1 Hour Ago</p>
-              </div>
-            </div>
-
-            {/* Activity Item 4 */}
-            <div className="relative flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full flex-shrink-0 relative z-10 shadow-sm overflow-hidden">
-                 <img src="https://i.pravatar.cc/150?u=3" alt="Anna W." className="w-full h-full object-cover" />
-              </div>
-              <div className="pt-0.5">
-                <p className="text-sm font-semibold text-slate-500 leading-tight">
-                  <span className="font-bold text-[#0c2b48]">Anna W.</span> updated <span className="font-bold text-[#0c2b48]">Fish Market</span>
-                </p>
-                <p className="text-[9px] font-black text-slate-300 mt-1 uppercase tracking-widest">3 Hours Ago</p>
-                <div className="mt-2 w-4 h-4 rounded-full bg-[#5e7050] border-2 border-white"></div>
-              </div>
-            </div>
+            ))}
+            {!isLoading && data?.activities.length === 0 && (
+              <p className="text-center text-xs font-bold text-slate-300 py-10 uppercase tracking-widest">No recent activity</p>
+            )}
           </div>
 
           <button className="text-[13px] font-black text-[#006e9b] mt-8 hover:text-[#005f85] transition-colors self-center">
@@ -226,3 +261,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

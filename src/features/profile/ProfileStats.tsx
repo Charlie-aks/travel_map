@@ -2,15 +2,22 @@
 
 import { MessageSquare, Image as ImageIcon, MapPin, ThumbsUp } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
+import { useProfileStore } from "@/store/useProfileStore";
+import { useEffect } from "react";
 
 export function GlobalImpact() {
   const { t } = useTranslation();
+  const { profile, fetchStats } = useProfileStore();
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
   
   const stats = [
-    { icon: <MessageSquare className="w-5 h-5" />, value: "124", label: t.profile.reviews, color: "text-[#0077b6]" },
-    { icon: <ImageIcon className="w-5 h-5" />, value: "856", label: t.profile.photosShared, color: "text-amber-600" },
-    { icon: <MapPin className="w-5 h-5" />, value: "12", label: t.profile.spotsAdded, color: "text-emerald-600" },
-    { icon: <ThumbsUp className="w-5 h-5" />, value: "2.4k", label: t.profile.helpfulVotes, color: "text-blue-600" },
+    { icon: <MessageSquare className="w-5 h-5" />, value: profile.stats.reviews.toString(), label: t.profile.reviews, color: "text-[#0077b6]" },
+    { icon: <ImageIcon className="w-5 h-5" />, value: "156", label: t.profile.photosShared, color: "text-amber-600" },
+    { icon: <MapPin className="w-5 h-5" />, value: profile.stats.spots.toString(), label: t.profile.spotsAdded, color: "text-emerald-600" },
+    { icon: <ThumbsUp className="w-5 h-5" />, value: "892", label: t.profile.helpfulVotes, color: "text-blue-600" },
   ];
 
   return (

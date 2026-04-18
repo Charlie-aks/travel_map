@@ -15,7 +15,6 @@ export function SettingsSidebar() {
 
   const navItems = [
     { icon: <User className="w-5 h-5" />, label: t.settingsSidebar.profile, href: "/profile" },
-    { icon: <LayoutGrid className="w-5 h-5" />, label: t.settingsSidebar.contributions, href: "/profile/contributions" },
     { icon: <Award className="w-5 h-5" />, label: t.settingsSidebar.achievements, href: "/achievements" },
     { icon: <Settings className="w-5 h-5" />, label: t.settingsSidebar.settings, href: "/settings" },
     { icon: <HelpCircle className="w-5 h-5" />, label: t.settingsSidebar.helpSupport, href: "/help" },

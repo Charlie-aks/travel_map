@@ -4,10 +4,16 @@ import { useProfileStore } from "@/store/useProfileStore";
 import { useTranslation } from "@/i18n/useTranslation";
 import { MessageSquare, Image as ImageIcon, MapPin, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export function AchievementStats() {
   const { profile } = useProfileStore();
   const { t } = useTranslation();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const stats = [
     { 
@@ -54,7 +60,9 @@ export function AchievementStats() {
             <div className="mb-4 p-3 rounded-2xl bg-white dark:bg-slate-950 shadow-sm transition-colors">
               {stat.icon}
             </div>
-            <div className="text-3xl font-black mb-1 transition-colors">{stat.value.toLocaleString()}</div>
+            <div className="text-3xl font-black mb-1 transition-colors">
+              {isMounted ? stat.value.toLocaleString() : stat.value}
+            </div>
             <div className="text-[10px] font-extrabold uppercase tracking-[0.2em] opacity-60 font-sans">{stat.label}</div>
           </div>
         </motion.div>

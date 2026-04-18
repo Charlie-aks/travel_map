@@ -8,7 +8,6 @@ export const en = {
   },
   settingsSidebar: {
     profile: "Profile",
-    contributions: "My Contributions",
     achievements: "Achievements",
     settings: "Settings",
     account: "Account",
@@ -121,7 +120,6 @@ export const en = {
     editProfile: "Edit Profile",
     shareProfile: "Share",
     milesTraveled: "Miles Traveled",
-    contributions: "Contributions",
     placesSaved: "Places Saved",
     linkedAccounts: "Linked Accounts",
     followingCount: "Following",

@@ -3,10 +3,16 @@
 import { useProfileStore } from "@/store/useProfileStore";
 import { useTranslation } from "@/i18n/useTranslation";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export function AchievementHero() {
   const { profile } = useProfileStore();
   const { t } = useTranslation();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   const xpPercentage = (profile.level.xp / profile.level.maxXp) * 100;
   
@@ -59,7 +65,7 @@ export function AchievementHero() {
             <div className="flex justify-between items-end">
               <span className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{t.profile.xpLabel}</span>
               <span className="text-sm font-black text-[#0077b6] dark:text-[#38bdf8] transition-colors">
-                {profile.level.xp.toLocaleString()} <span className="text-slate-300 dark:text-slate-600 font-bold">/ {profile.level.maxXp.toLocaleString()}</span>
+                {isMounted ? profile.level.xp.toLocaleString() : profile.level.xp} <span className="text-slate-300 dark:text-slate-600 font-bold">/ {isMounted ? profile.level.maxXp.toLocaleString() : profile.level.maxXp}</span>
               </span>
             </div>
             <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-1 transition-colors">

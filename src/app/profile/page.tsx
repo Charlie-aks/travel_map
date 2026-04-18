@@ -1,6 +1,6 @@
 import { SettingsSidebar } from "@/features/settings/SettingsSidebar";
 import { ProfileHero } from "@/features/profile/ProfileHero";
-import { ProfileStatsGrid } from "@/features/profile/ProfileStatsGrid";
+import { GlobalImpact } from "@/features/profile/ProfileStats";
 import { ProfileContentTabs } from "@/features/profile/ProfileContentTabs";
 import { SocialConnections } from "@/features/profile/SocialConnections";
 import { ProfileForms } from "@/features/profile/ProfileForms";
@@ -22,7 +22,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 2xl:grid-cols-3 gap-8 lg:gap-10">
             {/* Left Column: Main Content */}
             <div className="2xl:col-span-2 space-y-10">
-              <ProfileStatsGrid />
+              <GlobalImpact />
               <ProfileContentTabs />
               <ProfileForms />
             </div>

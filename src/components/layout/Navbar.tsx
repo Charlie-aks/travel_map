@@ -39,7 +39,6 @@ export function Navbar() {
 
   const profileNav = [
     { href: '/profile', label: t.settingsSidebar.profile, icon: <User className="w-5 h-5" /> },
-    { href: '/profile/contributions', label: t.settingsSidebar.contributions, icon: <LayoutGrid className="w-5 h-5" /> },
     { href: '/achievements', label: t.settingsSidebar.achievements, icon: <Award className="w-5 h-5" /> },
     { href: '/settings', label: t.settingsSidebar.settings, icon: <Settings className="w-5 h-5" /> },
     { href: '/help', label: t.settingsSidebar.helpSupport, icon: <HelpCircle className="w-5 h-5" /> }

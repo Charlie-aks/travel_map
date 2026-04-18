@@ -20,7 +20,6 @@ export function BadgeGrid() {
   const categoryLabels = {
     all: t.map.categories.all,
     exploration: t.profile.achievementBadges.split(' ')[0] + " " + t.navbar.explore,
-    contribution: t.settingsSidebar.contributions,
     special: t.profile.achievementBadges.split(' ')[0] + " Biệt",
   };
 

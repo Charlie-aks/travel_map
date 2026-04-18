@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { locations } from '@/db/schema';
 import { Location } from '@/constants/mock-data';
+import { auth } from '@/auth';
 
 import { eq } from 'drizzle-orm';
 
@@ -65,6 +66,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
     const data = await req.json();
 
     // Map UI data back to DB schema
@@ -74,6 +76,7 @@ export async function POST(req: Request) {
       description: data.description || '',
       imageUrl: data.imageUrl || '',
       category: data.category || 'All',
+      authorId: session?.user?.id || null,
       status: 'PENDING',
     };
 

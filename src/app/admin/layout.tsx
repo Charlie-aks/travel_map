@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search, Bell, HelpCircle, LayoutDashboard, MapPin, Users, FileText, Settings } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { AdminSearchBar } from "./components/AdminSearchBar";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* User Card */}
         <div className="p-3 m-4 rounded-xl bg-[#f4f5f6] flex items-center gap-3 border border-[#ecedef]">
           <div className="w-10 h-10 rounded-full shadow-sm overflow-hidden shrink-0">
-            <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Alex Marine" className="w-full h-full object-cover" />
+            <img src={session?.user?.image || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt={session?.user?.name || ""} className="w-full h-full object-cover" />
           </div>
           <div className="overflow-hidden">
-            <p className="text-[13px] font-bold text-[#0c2b48] truncate">Alex Marine</p>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">Lead Curator</p>
+            <p className="text-[13px] font-bold text-[#0c2b48] truncate">{session?.user?.name}</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{(session?.user as any).role}</p>
           </div>
         </div>
       </aside>
@@ -61,14 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Topbar */}
         <header className="h-20 px-8 flex items-center justify-between border-b border-transparent bg-transparent z-10 shrink-0">
-          <div className="relative w-[400px]">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search insights, locations, or users..." 
-              className="w-full pl-11 pr-4 py-2.5 bg-[#e9ecef]/50 hover:bg-[#e9ecef]/80 rounded-full text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0c2b48]/10 transition-all text-[#0c2b48] placeholder:text-slate-400"
-            />
-          </div>
+          <AdminSearchBar />
 
           <div className="flex items-center gap-3">
             <button className="relative p-2.5 rounded-full hover:bg-slate-200/50 text-slate-500 hover:text-[#0c2b48] transition-colors">

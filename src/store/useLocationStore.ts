@@ -82,9 +82,9 @@ export const useLocationStore = create<LocationState>()(
           // Không thêm trực tiếp `newLocation` vào state.locations nữa vì cần đợi Admin duyệt
           set({ isLoading: false });
           
-          // Achievements
+          // Refresh stats from DB
           const profileState = useProfileStore.getState();
-          profileState.incrementStat('spots', 1);
+          await profileState.fetchStats();
           profileState.incrementBadgeProgress('builder', 1);
           profileState.incrementBadgeProgress('guide', 1);
           profileState.addXp(50);
@@ -157,9 +157,9 @@ export const useLocationStore = create<LocationState>()(
             set({ selectedLocation: updatedLoc });
           }
 
-          // Achievements
+          // Refresh stats from DB
           const profileState = useProfileStore.getState();
-          profileState.incrementStat('reviews', 1);
+          await profileState.fetchStats();
           profileState.incrementBadgeProgress('explorer', 1);
           profileState.addXp(20);
         } catch (error: any) {

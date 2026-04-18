@@ -66,18 +66,6 @@ export function ProfileHero() {
             <p className="mt-5 text-slate-600 dark:text-slate-300 text-[15px] font-medium leading-relaxed max-w-2xl mx-auto md:mx-0 transition-colors">
               {profile.bio}
             </p>
-
-            <div className="mt-6 flex justify-center md:justify-start items-center gap-8">
-              <div className="flex flex-col md:flex-row md:items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-800 dark:text-white transition-colors leading-none">{profile.stats.followersCount.toLocaleString()}</span>
-                <span className="text-[11px] uppercase font-bold text-slate-400 tracking-widest leading-none">{t.profile.followersCount}</span>
-              </div>
-              <div className="w-px h-6 bg-slate-200 dark:bg-slate-800"></div>
-              <div className="flex flex-col md:flex-row md:items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-800 dark:text-white transition-colors leading-none">{profile.stats.followingCount.toLocaleString()}</span>
-                <span className="text-[11px] uppercase font-bold text-slate-400 tracking-widest leading-none">{t.profile.followingCount}</span>
-              </div>
-            </div>
           </div>
         </div>
 

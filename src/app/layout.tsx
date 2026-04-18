@@ -4,7 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { LocationDetailModal } from "@/features/locations/LocationDetailModal";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { Providers } from "@/components/Providers";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,18 +22,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(inter.className, "bg-slate-50 dark:bg-slate-950 antialiased h-dvh flex flex-col overflow-hidden transition-colors")}>
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="light" 
-          enableSystem={false}
-          disableTransitionOnChange
-          suppressHydrationWarning
-        >
+        <Providers>
           <Navbar />
           {children}
           <LocationDetailModal />
           <CommandMenu />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );
