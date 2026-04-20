@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { LocationRowActions } from "./LocationRowActions";
+import { LocationDetailModal } from "./LocationDetailModal";
 
 interface LocationRecord {
   id: string;
@@ -32,7 +33,7 @@ interface LocationRecord {
   } | null;
 }
 
-const CATEGORIES = ["ALL", "Nature", "Culture", "Cuisine", "Adventure", "Beach"];
+const CATEGORIES = ["ALL", "Dining", "Stay", "Cultural", "Beaches"];
 const STATUSES = ["ALL", "APPROVED", "PENDING"];
 
 export default function LocationManagementPage() {
@@ -45,6 +46,7 @@ export default function LocationManagementPage() {
   const [activeStatus, setActiveStatus] = useState("ALL");
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<LocationRecord | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -87,21 +89,21 @@ export default function LocationManagementPage() {
           <span className="text-[#006e9b]">Locations</span>
         </div>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center items-start justify-between gap-4">
           <div>
-            <h1 className="text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Location Management</h1>
-            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
+            <h1 className="text-[2rem] md:text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Location Management</h1>
+            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed text-sm md:text-base">
               Curate the finest destinations across Phan Thiet. Manage visibility, contributor credits, and content status for the editorial map.
             </p>
           </div>
-          <div className="flex gap-3 mt-2">
+          <div className="flex w-full sm:w-auto gap-3 mt-2 sm:mt-0">
              <button 
               onClick={fetchLocations}
-              className="p-3.5 bg-white border border-slate-100 rounded-full text-slate-400 hover:text-[#006e9b] hover:shadow-sm transition-all active:rotate-180 duration-500"
+              className="p-3.5 bg-white border border-slate-100 rounded-full text-slate-400 hover:text-[#006e9b] hover:shadow-sm transition-all active:rotate-180 duration-500 shrink-0"
             >
               <RefreshCcw className="w-5 h-5" />
             </button>
-            <button className="bg-[#006e9b] hover:bg-[#005f85] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(0,110,155,0.4)]">
+            <button className="bg-[#006e9b] flex-1 sm:flex-none justify-center hover:bg-[#005f85] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(0,110,155,0.4)]">
               <Plus className="w-4 h-4 stroke-3" />
               Add New Location
             </button>
@@ -110,8 +112,8 @@ export default function LocationManagementPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           {/* Category Filter */}
           <div className="relative">
             <div 
@@ -180,23 +182,24 @@ export default function LocationManagementPage() {
         
         <button 
           onClick={handleClearAll}
-          className="text-[13px] font-black text-slate-400 hover:text-red-500 transition-colors"
+          className="text-[13px] font-black text-slate-400 hover:text-red-500 transition-colors w-full md:w-auto text-center md:text-left pt-2 md:pt-0"
         >
           Clear All
         </button>
       </div>
 
       {/* Table Container */}
-      <div className="bg-white rounded-[2rem] shadow-[0_2px_25px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-slate-100 min-h-[400px]">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-[400px] text-slate-400 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin opacity-20" />
-            <p className="text-[11px] font-black uppercase tracking-widest">Loading location data...</p>
-          </div>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-50">
+      <div className="bg-white rounded-[2rem] shadow-[0_2px_25px_-10px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden min-h-[400px]">
+        <div className="overflow-x-auto custom-scrollbar">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-[400px] text-slate-400 gap-4 min-w-[800px]">
+              <Loader2 className="w-10 h-10 animate-spin opacity-20" />
+              <p className="text-[11px] font-black uppercase tracking-widest">Loading location data...</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="border-b border-slate-50">
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Name & Details</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Category</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Status</th>
@@ -258,7 +261,7 @@ export default function LocationManagementPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <LocationRowActions id={loc.id} status={loc.status} />
+                    <LocationRowActions id={loc.id} status={loc.status} onView={() => setSelectedLocation(loc)} />
                   </td>
                 </tr>
               ))}
@@ -270,12 +273,13 @@ export default function LocationManagementPage() {
                 </tr>
               )}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
+        </div>
 
         {/* Pagination Footer */}
-        <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between">
-          <p className="text-[12px] font-bold text-slate-400">
+        <div className="px-4 md:px-8 py-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[12px] font-bold text-slate-400 text-center sm:text-left">
             Showing <span className="text-[#0c2b48]">1-{locations.length}</span> of <span className="text-[#0c2b48]">{locations.length}</span> locations
           </p>
           
@@ -290,6 +294,11 @@ export default function LocationManagementPage() {
           </div>
         </div>
       </div>
+
+      <LocationDetailModal 
+        location={selectedLocation} 
+        onClose={() => setSelectedLocation(null)} 
+      />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { UserDetailModal } from "./UserDetailModal";
 
 interface UserRecord {
   id: string;
@@ -38,9 +39,9 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   
-  // Filter states
   const [activeRole, setActiveRole] = useState("ALL");
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -143,21 +144,21 @@ export default function UserManagementPage() {
           <span className="text-[#006e9b]">Users</span>
         </div>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center items-start justify-between gap-4">
           <div>
-            <h1 className="text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">User Management</h1>
-            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
+            <h1 className="text-[2rem] md:text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">User Management</h1>
+            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed text-sm md:text-base">
               Manage user accounts, roles, and platform permissions. Monitor activity and ensure community standards are maintained.
             </p>
           </div>
-          <div className="flex gap-3 mt-2">
+          <div className="flex w-full sm:w-auto gap-3 mt-2 sm:mt-0">
             <button 
               onClick={fetchUsers}
-              className="p-3.5 bg-white border border-slate-100 rounded-full text-slate-400 hover:text-[#006e9b] hover:shadow-sm transition-all active:rotate-180 duration-500"
+              className="p-3.5 bg-white border border-slate-100 rounded-full text-slate-400 hover:text-[#006e9b] hover:shadow-sm transition-all active:rotate-180 duration-500 shrink-0"
             >
               <RefreshCcw className="w-5 h-5" />
             </button>
-            <button className="bg-[#006e9b] hover:bg-[#005f85] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(0,110,155,0.4)]">
+            <button className="bg-[#006e9b] flex-1 sm:flex-none justify-center hover:bg-[#005f85] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(0,110,155,0.4)]">
               <UserPlus className="w-4 h-4 stroke-3" />
               Add New User
             </button>
@@ -166,8 +167,8 @@ export default function UserManagementPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <div className="relative">
             <div 
               onClick={() => setShowRoleDropdown(!showRoleDropdown)}
@@ -210,23 +211,24 @@ export default function UserManagementPage() {
         
         <button 
           onClick={handleClearAll}
-          className="text-[13px] font-black text-slate-400 hover:text-red-500 transition-colors"
+          className="text-[13px] font-black text-slate-400 hover:text-red-500 transition-colors w-full md:w-auto text-center md:text-left pt-2 md:pt-0"
         >
           Clear All
         </button>
       </div>
 
       {/* Table Container */}
-      <div className="bg-white rounded-[2rem] shadow-[0_2px_25px_-10px_rgba(0,0,0,0.05)] overflow-hidden border border-slate-100 min-h-[400px]">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-[400px] text-slate-400 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin opacity-20" />
-            <p className="text-[11px] font-black uppercase tracking-widest">Loading member data...</p>
-          </div>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-50">
+      <div className="bg-white rounded-[2rem] shadow-[0_2px_25px_-10px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden min-h-[400px]">
+        <div className="overflow-x-auto custom-scrollbar">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-[400px] text-slate-400 gap-4 min-w-[800px]">
+              <Loader2 className="w-10 h-10 animate-spin opacity-20" />
+              <p className="text-[11px] font-black uppercase tracking-widest">Loading member data...</p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="border-b border-slate-50">
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Name & Email</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Role</th>
                 <th className="px-8 py-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Status</th>
@@ -281,6 +283,13 @@ export default function UserManagementPage() {
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2">
                        <button 
+                        onClick={() => setSelectedUser(user)}
+                        title="View Details"
+                        className="p-2.5 text-slate-300 hover:text-[#0c2b48] hover:bg-slate-100 rounded-full transition-all shadow-none hover:shadow-sm border border-transparent hover:border-slate-100"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                       <button 
                         onClick={() => toggleUserRole(user)}
                         title="Change Role"
                         className="p-2.5 text-slate-300 hover:text-[#006e9b] hover:bg-white rounded-full transition-all shadow-none hover:shadow-sm border border-transparent hover:border-slate-100"
@@ -306,12 +315,13 @@ export default function UserManagementPage() {
                 </tr>
               )}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
+        </div>
 
         {/* Pagination Footer */}
-        <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between">
-          <p className="text-[12px] font-bold text-slate-400">
+        <div className="px-4 md:px-8 py-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[12px] font-bold text-slate-400 text-center sm:text-left">
             Showing <span className="text-[#0c2b48]">1-{users.length}</span> of <span className="text-[#0c2b48]">{users.length}</span> users
           </p>
           
@@ -326,6 +336,11 @@ export default function UserManagementPage() {
           </div>
         </div>
       </div>
+
+      <UserDetailModal 
+        user={selectedUser} 
+        onClose={() => setSelectedUser(null)} 
+      />
     </div>
   );
 }

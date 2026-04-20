@@ -141,7 +141,7 @@ export function Sidebar() {
 
       {/* Mobile Bottom Sheet (Drawer) */}
       <div className="md:hidden fixed bottom-1 left-0 right-0 z-50 px-2">
-        <Drawer>
+        <Drawer open={useLocationStore((s) => s.isDrawerOpen)} onOpenChange={(open) => useLocationStore.getState().setIsDrawerOpen(open)}>
           <DrawerTrigger asChild>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] p-4 flex flex-col items-center cursor-pointer border border-slate-100 dark:border-slate-800 mx-2 mb-2 transition-colors">
               <GripHorizontal className="w-6 h-6 text-slate-300 dark:text-slate-600 mb-2 transition-colors" />

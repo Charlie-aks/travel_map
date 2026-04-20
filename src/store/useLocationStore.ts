@@ -7,6 +7,7 @@ import { useProfileStore } from './useProfileStore';
 interface LocationState {
   selectedLocation: Location | null;
   isDetailModalOpen: boolean;
+  isDrawerOpen: boolean;
   activeCategory: Category;
   searchQuery: string;
   locations: Location[];
@@ -15,6 +16,7 @@ interface LocationState {
   
   setSelectedLocation: (location: Location | null) => void;
   setDetailModalOpen: (isOpen: boolean) => void;
+  setIsDrawerOpen: (isOpen: boolean) => void;
   setActiveCategory: (category: Category) => void;
   setSearchQuery: (query: string) => void;
   filteredLocations: () => Location[];
@@ -37,6 +39,7 @@ export const useLocationStore = create<LocationState>()(
     (set, get) => ({
       selectedLocation: null,
       isDetailModalOpen: false,
+      isDrawerOpen: false,
       activeCategory: 'All',
       searchQuery: '',
       locations: [], // Start empty instead of mockLocations
@@ -44,7 +47,11 @@ export const useLocationStore = create<LocationState>()(
       error: null,
       
       setSelectedLocation: (location) => set({ selectedLocation: location }),
-      setDetailModalOpen: (isOpen) => set({ isDetailModalOpen: isOpen }),
+      setDetailModalOpen: (isOpen) => set((state) => ({ 
+        isDetailModalOpen: isOpen,
+        isDrawerOpen: isOpen ? false : state.isDrawerOpen // Close drawer if modal opens to prevent Vaul scroll locks
+      })),
+      setIsDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
       setActiveCategory: (category) => set({ activeCategory: category }),
       setSearchQuery: (query) => set({ searchQuery: query }),
       

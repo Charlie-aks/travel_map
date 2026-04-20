@@ -4,7 +4,7 @@ import { CheckCircle, Trash2, Eye } from "lucide-react";
 import { useTransition } from "react";
 import { approveLocationAction, deleteLocationAction } from "@/lib/actions/admin";
 
-export function LocationRowActions({ id, status }: { id: string, status: string | null }) {
+export function LocationRowActions({ id, status, onView }: { id: string, status: string | null, onView?: () => void }) {
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -25,8 +25,9 @@ export function LocationRowActions({ id, status }: { id: string, status: string 
       )}
       <button 
         disabled={isPending}
-        className="p-2.5 text-slate-300 hover:text-[#0c2b48] hover:bg-slate-100 rounded-full transition-all border border-transparent pointer-events-none opacity-50 flex items-center justify-center"
-        title="Xem chi tiết (Đang tắt)"
+        onClick={onView}
+        className="p-2.5 text-slate-400 hover:text-[#0c2b48] hover:bg-slate-100 rounded-full transition-all border border-transparent flex items-center justify-center cursor-pointer"
+        title="Xem chi tiết"
       >
         <Eye className="w-4 h-4" />
       </button>

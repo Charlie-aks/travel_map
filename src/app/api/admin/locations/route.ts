@@ -23,8 +23,12 @@ export async function GET(req: Request) {
       filters.push(eq(locations.status, status));
     }
 
+    const whereClause = filters.length > 0 
+      ? (filters.length === 1 ? filters[0] : and(...filters)) 
+      : undefined;
+
     const allLocations = await db.query.locations.findMany({
-      where: filters.length > 0 ? and(...filters) : undefined,
+      where: whereClause,
       with: {
         author: true,
       },

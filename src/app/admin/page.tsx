@@ -68,12 +68,12 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center items-start justify-between gap-4">
         <div>
-          <h1 className="text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Coastal Overview</h1>
-          <p className="text-slate-500 font-medium mt-1">Welcome back. The tides are in your favor today.</p>
+          <h1 className="text-[2rem] md:text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Coastal Overview</h1>
+          <p className="text-slate-500 font-medium mt-1 text-sm md:text-base">Welcome back. The tides are in your favor today.</p>
         </div>
-        <button className="bg-[#006e9b] hover:bg-[#005f85] text-white px-6 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors shadow-sm mt-2">
+        <button className="bg-[#006e9b] hover:bg-[#005f85] text-white px-6 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors shadow-sm w-full sm:w-auto justify-center">
           <Plus className="w-4 h-4" />
           Generate Report
         </button>
@@ -151,16 +151,16 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Visitor Trends Chart */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-8 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.05)] flex flex-col min-h-[400px]">
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-8 gap-4">
             <div>
               <h2 className="text-xl font-bold text-[#0c2b48]">Visitor Trends</h2>
               <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Monthly traffic volume in Phan Thiet regions</p>
             </div>
-            <button className="flex items-center gap-1.5 px-4 py-2 bg-[#f4f5f7] hover:bg-slate-200 rounded-full text-[13px] font-bold text-[#0c2b48] transition-colors">
-              Last 30 Days <ChevronDown className="w-4 h-4 ml-0.5" />
+            <button className="flex items-center justify-between w-full sm:w-auto gap-1.5 px-4 py-2 bg-[#f4f5f7] hover:bg-slate-200 rounded-full text-[13px] font-bold text-[#0c2b48] transition-colors">
+              <span>Last 30 Days</span> <ChevronDown className="w-4 h-4 ml-0.5" />
             </button>
           </div>
-          <div className="flex-1 w-full relative">
+          <div className="flex-1 w-full relative min-h-[300px]">
             <VisitorChart />
           </div>
         </div>
@@ -250,9 +250,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Footer */}
-      <footer className="flex justify-between items-center py-6 border-t border-slate-200 mt-10">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">© 2024 THE COASTAL EDITORIAL PORTAL</p>
-        <div className="flex gap-8">
+      <footer className="flex flex-col md:flex-row justify-between items-center py-6 border-t border-slate-200 mt-10 gap-4">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">© 2024 THE COASTAL EDITORIAL PORTAL</p>
+        <div className="flex gap-6 md:gap-8 flex-wrap justify-center">
           <a href="#" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-[#0c2b48] transition-colors">STATUS</a>
           <a href="#" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-[#0c2b48] transition-colors">POLICY</a>
           <a href="#" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-[#0c2b48] transition-colors">SUPPORT</a>

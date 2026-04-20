@@ -1,8 +1,9 @@
 "use client";
 
-import { Trash2, EyeOff, Eye } from "lucide-react";
+import { Trash2, EyeOff, Eye, Info } from "lucide-react";
 import { useTransition } from "react";
 import { toggleReviewStatusAction, deleteReviewAction } from "@/lib/actions/admin";
+import Link from "next/link";
 
 export function ReviewRowActions({ id, status }: { id: string, status: string | null }) {
   const [isPending, startTransition] = useTransition();
@@ -11,6 +12,14 @@ export function ReviewRowActions({ id, status }: { id: string, status: string | 
 
   return (
     <div className="flex items-center justify-end gap-2 text-right">
+      <Link 
+        href={`?view=${id}`}
+        className="p-2.5 text-slate-400 hover:text-[#0c2b48] hover:bg-slate-100 rounded-full transition-all border border-transparent inline-flex items-center justify-center"
+        title="Xem chi tiết đánh giá"
+        scroll={false}
+      >
+        <Info className="w-4 h-4" />
+      </Link>
       <button 
         disabled={isPending}
         onClick={() => {

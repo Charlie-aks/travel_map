@@ -12,8 +12,15 @@ import { db } from "@/db";
 import { reviews } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { ReviewRowActions } from "./ReviewRowActions";
+import { ReviewDetailModal } from "./ReviewDetailModal";
 
-export default async function ReportsManagementPage() {
+interface PageProps {
+  searchParams: {
+    view?: string;
+  }
+}
+
+export default async function ReportsManagementPage({ searchParams }: PageProps) {
   const dbReviews = await db.query.reviews.findMany({
     with: {
       location: true,
@@ -32,14 +39,14 @@ export default async function ReportsManagementPage() {
           <span className="text-[#006e9b]">Reports & Reviews</span>
         </div>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center items-start justify-between gap-4">
           <div>
-            <h1 className="text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Reports & Reviews</h1>
-            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed">
+            <h1 className="text-[2rem] md:text-[2.5rem] font-black tracking-tight text-[#0c2b48] leading-tight">Reports & Reviews</h1>
+            <p className="text-slate-500 font-medium mt-2 max-w-2xl leading-relaxed text-sm md:text-base">
               Monitor user feedback and community ratings. Moderate content to ensure high-quality information and authentic experiences.
             </p>
           </div>
-          <button className="bg-[#f45d48] hover:bg-[#d94f4a] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(244,93,72,0.4)] mt-2 opacity-50 cursor-not-allowed">
+          <button className="bg-[#f45d48] w-full sm:w-auto justify-center hover:bg-[#d94f4a] text-white px-8 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2.5 transition-all shadow-[0_4px_15px_-5px_rgba(244,93,72,0.4)] mt-2 opacity-50 cursor-not-allowed">
             <Trash2 className="w-4 h-4 stroke-3" />
             Clear All Reports
           </button>
@@ -47,8 +54,8 @@ export default async function ReportsManagementPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           <div className="flex items-center gap-3 px-6 py-2.5 bg-white rounded-full border border-slate-100 shadow-sm">
             <Filter className="w-4 h-4 text-slate-400" />
             <span className="text-[13px] font-bold text-slate-400">Sort by:</span>
@@ -65,7 +72,7 @@ export default async function ReportsManagementPage() {
           </div>
         </div>
         
-        <button className="text-[13px] font-black text-slate-400 hover:text-[#0c2b48] transition-colors">
+        <button className="text-[13px] font-black text-slate-400 hover:text-[#0c2b48] transition-colors w-full md:w-auto text-center md:text-left pt-2 md:pt-0">
           Reset Filters
         </button>
       </div>
@@ -170,8 +177,8 @@ export default async function ReportsManagementPage() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-8 py-6 border-t border-slate-50 flex items-center justify-between">
-          <p className="text-[12px] font-bold text-slate-400">
+        <div className="px-4 md:px-8 py-6 border-t border-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[12px] font-bold text-slate-400 text-center sm:text-left">
             Showing <span className="text-[#0c2b48]">{dbReviews.length > 0 ? 1 : 0}-{dbReviews.length}</span> of <span className="text-[#0c2b48]">{dbReviews.length}</span> reports
           </p>
           
@@ -186,6 +193,10 @@ export default async function ReportsManagementPage() {
           </div>
         </div>
       </div>
+
+      <ReviewDetailModal 
+        review={searchParams?.view ? (dbReviews.find(r => r.id === searchParams.view) as any || null) : null}
+      />
     </div>
   );
 }
