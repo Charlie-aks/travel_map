@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Send, User, Lock, EyeOff } from "lucide-react";
 import { Location } from "@/constants/mock-data";
 import { useLocationStore } from "@/store/useLocationStore";
@@ -19,28 +19,54 @@ export function LocationReviews({ location }: LocationReviewsProps) {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [comment, setComment] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+
+  const fetchReviews = async () => {
+    try {
+      setIsLoadingReviews(true);
+      const res = await fetch(`/api/locations/${location.id}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim() || !isAuthenticated) return;
 
     setIsSubmitting(true);
-    await addReview(location.id, {
-      userName: isAnonymous ? 'Người dùng ẩn danh' : profile.fullName,
-      rating,
-      comment: comment.trim(),
-      // Add isAnonymous for the API call in store
-      isAnonymous: isAnonymous
-    } as any);
-    
-    // Reset form
-    setComment("");
-    setRating(5);
-    setIsAnonymous(false);
-    setIsSubmitting(false);
-  };
+    try {
+      await addReview(location.id, {
+        userName: isAnonymous ? 'Người dùng ẩn danh' : profile.fullName,
+        rating,
+        comment: comment.trim(),
+        // Add isAnonymous for the API call in store
+        isAnonymous: isAnonymous
+      } as any);
+      
+      // Reset form
+      setComment("");
+      setRating(5);
+      setIsAnonymous(false);
 
-  const reviews = location.reviews || [];
+      // Re-fetch reviews to show newly submitted review
+      await fetchReviews();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="mt-12 mb-12">

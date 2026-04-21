@@ -1,59 +1,53 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { locations } from '@/db/schema';
+import { locations, reviews } from '@/db/schema';
 import { Location } from '@/constants/mock-data';
 import { auth } from '@/auth';
 
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const allLocations = await db.query.locations.findMany({
-      where: eq(locations.status, 'APPROVED'),
-      with: {
-        reviews: {
-          where: (reviews, { eq }) => eq(reviews.status, 'PUBLISHED'),
-          with: {
-            author: true
-          }
-        }
-      }
-    });
+    const results = await db.select({
+      id: locations.id,
+      name: locations.title,
+      description: locations.description,
+      category: locations.category,
+      coordinates: locations.coordinates,
+      imageUrl: locations.imageUrl,
+      avgRating: sql<number>`COALESCE(AVG(${reviews.rating}), 5.0)`,
+      reviewsCount: sql<number>`COUNT(${reviews.id})`
+    })
+    .from(locations)
+    .leftJoin(
+      reviews,
+      sql`${locations.id} = ${reviews.locationId} AND ${reviews.status} = 'PUBLISHED'`
+    )
+    .where(eq(locations.status, 'APPROVED'))
+    .groupBy(locations.id);
     
     // Map DB schema to UI expected mock-data schema to prevent breaking changes
-    const mappedLocations = allLocations.map(loc => {
+    const mappedLocations = results.map(loc => {
       const coords = (loc.coordinates as [number, number]) || [0, 0];
       
-      // Calculate real rating and reviewsCount
-      const reviewList = loc.reviews || [];
-      const rating = reviewList.length > 0 
-        ? Number((reviewList.reduce((acc, r) => acc + r.rating, 0) / reviewList.length).toFixed(1))
-        : 5.0; // Default rating if no reviews
-      
-      const reviewsCount = reviewList.length > 0 ? `${reviewList.length}` : 'New';
+      const rating = Number(loc.avgRating).toFixed(1);
+      const reviewsCountStr = Number(loc.reviewsCount) > 0 ? `${loc.reviewsCount}` : 'New';
 
       return {
         id: loc.id,
-        name: loc.title,
+        name: loc.name,
         description: loc.description || '',
         category: loc.category as any,
-        rating,
-        reviewsCount,
+        rating: Number(rating),
+        reviewsCount: reviewsCountStr,
         distance: 'Local',
         lat: coords[0] || 0,
         lng: coords[1] || 0,
         imageUrl: loc.imageUrl,
         address: 'No Address',
-        reviews: reviewList.map(r => ({
-          id: r.id,
-          userName: r.isAnonymous ? "Người dùng ẩn danh" : (r.author?.name || "Khách du lịch"),
-          rating: r.rating,
-          comment: r.content || "",
-          date: r.createdAt?.toISOString() || new Date().toISOString(),
-          avatarUrl: r.isAnonymous ? undefined : (r.author?.image || undefined)
-        }))
+        reviews: [] // Empty by default, fetched lazily in Detail View
       };
     });
 
