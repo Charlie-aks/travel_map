@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, Settings, Menu, Compass, Bookmark, MapPin, User, LayoutGrid, Award, HelpCircle } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, Settings, Menu, Compass, Bookmark, MapPin, User, LayoutGrid, Award, HelpCircle, LogOut } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useLocationStore } from "@/store/useLocationStore";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
@@ -11,6 +11,7 @@ import { useEffect } from "react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useTranslation();
   const profile = useProfileStore((state) => state.profile);
   const isAuthenticated = useProfileStore((state) => state.isAuthenticated);
@@ -123,6 +124,25 @@ export function Navbar() {
                         </SheetClose>
                       );
                     })}
+                    {isAuthenticated && (
+                      <SheetClose
+                        nativeButton={false}
+                        render={
+                          <div 
+                            onClick={() => {
+                              useProfileStore.getState().logout();
+                              router.push('/login');
+                            }}
+                            className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl font-bold text-sm transition-all text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 w-full text-left cursor-pointer"
+                          />
+                        }
+                      >
+                        <div className="text-red-500">
+                          <LogOut className="w-5 h-5" />
+                        </div>
+                        {t.settingsSidebar.logOut}
+                      </SheetClose>
+                    )}
                   </nav>
                 </div>
               </div>
