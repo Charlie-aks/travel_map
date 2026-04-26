@@ -44,7 +44,7 @@ export interface UserProfile {
 interface ProfileState {
   profile: UserProfile;
   isAuthenticated: boolean;
-  login: (name: string, email?: string, role?: Role) => void;
+  login: (name: string, email?: string, role?: Role, avatarUrl?: string) => void;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
   unlockBadge: (badgeId: string) => void;
@@ -97,9 +97,14 @@ export const useProfileStore = create<ProfileState>()(
     (set) => ({
       profile: defaultProfile,
       isAuthenticated: false,
-      login: (name, email, role = 'USER') => set((state) => ({
+      login: (name, email, role = 'USER', avatarUrl) => set((state) => ({
         isAuthenticated: true,
-        profile: { ...state.profile, fullName: name, role }
+        profile: { 
+          ...state.profile, 
+          fullName: name, 
+          role,
+          ...(avatarUrl ? { avatarUrl } : {})
+        }
       })),
       logout: () => set((state) => ({
         isAuthenticated: false,

@@ -4,6 +4,7 @@ import { useProfileStore } from "@/store/useProfileStore";
 import { User, LayoutGrid, Award, Settings, HelpCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -61,9 +62,9 @@ export function SettingsSidebar() {
           {t.settingsSidebar.upgrade}
         </button>
         <button 
-          onClick={() => {
+          onClick={async () => {
             useProfileStore.getState().logout();
-            router.push('/login');
+            await signOut({ callbackUrl: '/login' });
           }}
           className="flex items-center gap-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 font-bold px-4 py-3 rounded-xl transition-colors w-full text-sm"
         >

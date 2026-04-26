@@ -8,6 +8,7 @@ import { useLocationStore } from "@/store/useLocationStore";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { useTranslation } from "@/i18n/useTranslation";
 import { useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -15,6 +16,8 @@ export function Navbar() {
   const { t } = useTranslation();
   const profile = useProfileStore((state) => state.profile);
   const isAuthenticated = useProfileStore((state) => state.isAuthenticated);
+  const login = useProfileStore((state) => state.login);
+  const { data: session, status } = useSession();
   const { fetchLocations, locations, fetchSavedLocations } = useLocationStore();
 
   useEffect(() => {
@@ -29,6 +32,15 @@ export function Navbar() {
       fetchSavedLocations();
     }
   }, [fetchSavedLocations, isAuthenticated]);
+
+  // Sync session from NextAuth (e.g. after Google Login)
+  useEffect(() => {
+    if (status === "authenticated" && session?.user && !isAuthenticated) {
+      const { name, email, image } = session.user;
+      const role = (session.user as any).role || "USER";
+      login(name || email?.split('@')[0] || "User", email || "", role, image || undefined);
+    }
+  }, [session, status, isAuthenticated, login]);
 
   if (pathname === '/register' || pathname === '/login' || pathname.startsWith('/admin')) return null;
 
@@ -129,9 +141,9 @@ export function Navbar() {
                         nativeButton={false}
                         render={
                           <div 
-                            onClick={() => {
+                            onClick={async () => {
                               useProfileStore.getState().logout();
-                              router.push('/login');
+                              await signOut({ callbackUrl: '/login' });
                             }}
                             className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl font-bold text-sm transition-all text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 w-full text-left cursor-pointer"
                           />

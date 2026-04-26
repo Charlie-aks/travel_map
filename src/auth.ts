@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";//Kết nối Auth.js với Database của bạn. Nó cho phép thư viện tự động tương tác với các bảng bạn đã định nghĩa
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -12,6 +13,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   adapter: DrizzleAdapter(db),
   providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          prompt: "select_account",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
