@@ -60,7 +60,7 @@ export const useLocationStore = create<LocationState>()(
         return locations.filter((loc) => {
           const matchesCategory = activeCategory === 'All' || loc.category === activeCategory;
           const matchesQuery = loc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                               loc.description.toLowerCase().includes(searchQuery.toLowerCase());
+                               (loc.description || '').toLowerCase().includes(searchQuery.toLowerCase());
           return matchesCategory && matchesQuery;
         });
       },

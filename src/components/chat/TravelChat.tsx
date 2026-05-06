@@ -10,9 +10,7 @@ import remarkGfm from 'remark-gfm';
 export default function TravelChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [localInput, setLocalInput] = useState("");
-  const { messages, sendMessage, status } = useChat({
-    api: '/api/chat',
-  });
+  const { messages, sendMessage, status } = useChat();
 
   const isLoading = status !== 'ready';
 
