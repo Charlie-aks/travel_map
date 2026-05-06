@@ -21,7 +21,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 export default function AddLocationForm() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { name, updateField, address, category, description, imageUrl, lat, lng, editingId, reset } = useAddLocationStore();
+  const { name, updateField, address, category, description, imageUrl, lat, lng, editingId, reset, bestTiming, price, contact } = useAddLocationStore();
   const { addLocation, updateLocation } = useLocationStore();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -51,6 +51,9 @@ export default function AddLocationForm() {
           category: category as Category,
           address,
           description,
+          bestTiming,
+          price,
+          contact,
           lat,
           lng,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
@@ -62,6 +65,9 @@ export default function AddLocationForm() {
           category: category as Category,
           address,
           description,
+          bestTiming,
+          price,
+          contact,
           lat,
           lng,
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
@@ -154,10 +160,49 @@ export default function AddLocationForm() {
         </div>
       </section>
 
-      {/* 2. Visual Story */}
+      {/* Plan Your Visit (Optional) */}
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded-lg bg-[#e0f2fe] dark:bg-[#0077b6]/20 text-[#0077b6] dark:text-[#38bdf8] flex items-center justify-center font-bold">2</div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-50 transition-colors">{t.addLocationForm.planYourVisit || "Plan Your Visit (Optional)"}</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase transition-colors">{t.addLocationForm.bestTiming || "Best Timing"}</label>
+            <Input 
+              placeholder={t.addLocationForm.bestTimingPlaceholder || "e.g. Early Morning"}
+              className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-11 text-slate-800 dark:text-slate-100 transition-colors"
+              value={bestTiming || ''}
+              onChange={(e) => updateField('bestTiming', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase transition-colors">{t.addLocationForm.entranceFee || "Entrance Fee"}</label>
+            <Input 
+              placeholder={t.addLocationForm.entranceFeePlaceholder || "e.g. Free or 50,000 VND"}
+              className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-11 text-slate-800 dark:text-slate-100 transition-colors"
+              value={price || ''}
+              onChange={(e) => updateField('price', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase transition-colors">{t.addLocationForm.contactInfo || "Contact Info"}</label>
+          <Input 
+            placeholder={t.addLocationForm.contactInfoPlaceholder || "e.g. +84 123 456 789"}
+            className="bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-11 text-slate-800 dark:text-slate-100 transition-colors"
+            value={contact || ''}
+            onChange={(e) => updateField('contact', e.target.value)}
+          />
+        </div>
+      </section>
+
+      {/* 3. Visual Story */}
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-lg bg-[#e0f2fe] dark:bg-[#0077b6]/20 text-[#0077b6] dark:text-[#38bdf8] flex items-center justify-center font-bold">3</div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-50 transition-colors">{t.addLocationForm.visualStory}</h2>
         </div>
         
@@ -190,10 +235,10 @@ export default function AddLocationForm() {
         </label>
       </section>
 
-      {/* 3. Map Placement */}
+      {/* 4. Map Placement */}
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-[#e0f2fe] dark:bg-[#0077b6]/20 text-[#0077b6] dark:text-[#38bdf8] flex items-center justify-center font-bold">3</div>
+          <div className="w-8 h-8 rounded-lg bg-[#e0f2fe] dark:bg-[#0077b6]/20 text-[#0077b6] dark:text-[#38bdf8] flex items-center justify-center font-bold">4</div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-50 transition-colors">{t.addLocationForm.mapPlacement}</h2>
         </div>
         <MapPickerDynamic />

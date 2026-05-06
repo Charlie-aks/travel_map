@@ -17,6 +17,11 @@ export async function GET() {
       category: locations.category,
       coordinates: locations.coordinates,
       imageUrl: locations.imageUrl,
+      address: locations.address,
+      bestTiming: locations.bestTiming,
+      price: locations.price,
+      contact: locations.contact,
+      status: locations.status,
       avgRating: sql<number>`COALESCE(AVG(${reviews.rating}), 5.0)`,
       reviewsCount: sql<number>`COUNT(${reviews.id})`
     })
@@ -46,7 +51,11 @@ export async function GET() {
         lat: coords[0] || 0,
         lng: coords[1] || 0,
         imageUrl: loc.imageUrl,
-        address: 'No Address',
+        address: loc.address || 'No Address',
+        bestTiming: loc.bestTiming || '',
+        price: loc.price || '',
+        contact: loc.contact || '',
+        status: loc.status || 'APPROVED',
         reviews: [] // Empty by default, fetched lazily in Detail View
       };
     });
@@ -70,6 +79,10 @@ export async function POST(req: Request) {
       description: data.description || '',
       imageUrl: data.imageUrl || '',
       category: data.category || 'All',
+      address: data.address || '',
+      bestTiming: data.bestTiming || '',
+      price: data.price || '',
+      contact: data.contact || '',
       authorId: session?.user?.id || null,
       status: 'PENDING',
     };
@@ -94,7 +107,11 @@ export async function POST(req: Request) {
       lat: coords[0],
       lng: coords[1],
       imageUrl: loc.imageUrl,
-      address: data.address || 'No Address',
+      address: loc.address || 'No Address',
+      bestTiming: loc.bestTiming || '',
+      price: loc.price || '',
+      contact: loc.contact || '',
+      status: (loc.status as any) || 'PENDING',
     };
     
     return NextResponse.json(responseLocation, { status: 201 });

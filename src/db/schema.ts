@@ -33,15 +33,19 @@ export const accounts = pgTable("account", {
 // --- APPLICATION SPECIFIC TABLES ---
 
 export const locations = pgTable("location", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  title: text("title").notNull(),
-  coordinates: jsonb("coordinates").notNull(), // Expected format: [lat, lng] lưu tọa độ địa điểm
-  description: text("description"),
-  imageUrl: text("imageUrl").notNull(),
-  category: text("category").notNull(),
-  authorId: text("authorId").references(() => users.id), //
-  status: text("status").default("PENDING"),
-  createdAt: timestamp("createdAt").defaultNow(),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  coordinates: jsonb("coordinates").notNull(), // Expected format: [lat, lng] lưu tọa độ địa điểm
+  description: text("description"),
+  imageUrl: text("imageUrl").notNull(),
+  category: text("category").notNull(),
+  address: text("address"),
+  bestTiming: text("bestTiming"),
+  price: text("price"),
+  contact: text("contact"),
+  authorId: text("authorId").references(() => users.id), //
+  status: text("status").default("PENDING"),
+  createdAt: timestamp("createdAt").defaultNow(),
 });
 
 export const reviews = pgTable("review", {

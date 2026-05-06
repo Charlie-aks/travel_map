@@ -9,22 +9,23 @@ export interface Review {
   avatarUrl?: string;
 }
 
-export interface Location {
+export type Location = {
   id: string;
   name: string;
-  description: string;
   category: Category;
   rating: number;
-  reviewsCount: string;
-  reviews?: Review[];
+  reviewsCount: number | string;
   distance: string;
   lat: number;
   lng: number;
   imageUrl: string;
-  address: string;
+  description?: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  address?: string;
   bestTiming?: string;
   price?: string;
-}
+  contact?: string;
+};
 
 export interface Collection {
   id: string;

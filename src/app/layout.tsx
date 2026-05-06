@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { LocationDetailModal } from "@/features/locations/LocationDetailModal";
 import { Providers } from "@/components/Providers";
 import { CommandMenu } from "@/components/layout/CommandMenu";
+import TravelChat from "@/components/chat/TravelChat";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,7 @@ export default function RootLayout({
           {children}
           <LocationDetailModal />
           <CommandMenu />
+          <TravelChat />
         </Providers>
       </body>
     </html>

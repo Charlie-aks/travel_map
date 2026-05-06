@@ -151,7 +151,7 @@ function LocationDetailContent({ onClose }: { onClose: () => void }) {
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 transition-colors">{t.locationDetail.bestTiming}</p>
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors">{selectedLocation.bestTiming || t.locationDetail.allDay}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 transition-colors">{t.locationDetail.open24}</p>
+                      {!selectedLocation.bestTiming && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 transition-colors">{t.locationDetail.open24}</p>}
                     </div>
                   </div>
 
@@ -171,7 +171,7 @@ function LocationDetailContent({ onClose }: { onClose: () => void }) {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 transition-colors">{t.locationDetail.contact}</p>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors">+84 252 3847 444</p>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors">{selectedLocation.contact || "N/A"}</p>
                     </div>
                   </div>
                 </div>

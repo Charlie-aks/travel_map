@@ -6,6 +6,9 @@ interface AddLocationFormState {
   category: Category;
   address: string;
   description: string;
+  bestTiming?: string;
+  price?: string;
+  contact?: string;
   lat: number;
   lng: number;
   imageUrl: string;
@@ -20,6 +23,9 @@ export const useAddLocationStore = create<AddLocationFormState>((set) => ({
   category: 'All',
   address: '',
   description: '',
+  bestTiming: '',
+  price: '',
+  contact: '',
   lat: 10.9333,
   lng: 108.1000,
   imageUrl: '',
@@ -30,6 +36,9 @@ export const useAddLocationStore = create<AddLocationFormState>((set) => ({
     address: loc.address,
     category: loc.category,
     description: loc.description,
+    bestTiming: loc.bestTiming || '',
+    price: loc.price || '',
+    contact: loc.contact || '',
     imageUrl: loc.imageUrl,
     lat: loc.lat,
     lng: loc.lng,
@@ -40,6 +49,9 @@ export const useAddLocationStore = create<AddLocationFormState>((set) => ({
     category: 'All',
     address: '',
     description: '',
+    bestTiming: '',
+    price: '',
+    contact: '',
     lat: 10.9333,
     lng: 108.1000,
     imageUrl: '',

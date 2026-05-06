@@ -1,13 +1,19 @@
 "use client";
 
 import { useTranslation } from "@/i18n/useTranslation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Map as MapIcon, MessageSquare, Clock, Globe, ArrowRight, Star } from "lucide-react";
+import { Heart, Map as MapIcon, MessageSquare, Clock, Globe, ArrowRight, Star, MapPin, Edit3 } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useLocationStore } from "@/store/useLocationStore";
+import { useRouter } from "next/navigation";
+import { useAddLocationStore } from "@/store/useAddLocationStore";
+import Map from "@/features/map-view/Map";
+import { Pagination } from "@/components/ui/pagination";
 
-type TabType = 'saved' | 'map' | 'reviews' | 'activities';
+const ITEMS_PER_PAGE = 6;
+
+type TabType = 'saved' | 'my-locations' | 'map' | 'reviews' | 'activities';
 
 export function ProfileContentTabs() {
   const { t } = useTranslation();
@@ -15,6 +21,7 @@ export function ProfileContentTabs() {
 
   const tabs = [
     { id: 'saved', label: t.profile.savedPlaces, icon: <Heart className="w-4 h-4" /> },
+    { id: 'my-locations', label: t.profile.myLocations || "Địa điểm của tôi", icon: <MapPin className="w-4 h-4" /> },
     { id: 'map', label: t.profile.myMap, icon: <MapIcon className="w-4 h-4" /> },
     { id: 'reviews', label: t.profile.reviewsPhotos, icon: <MessageSquare className="w-4 h-4" /> },
     { id: 'activities', label: t.profile.activities, icon: <Clock className="w-4 h-4" /> },
@@ -51,6 +58,7 @@ export function ProfileContentTabs() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'saved' && <SavedPlacesTab />}
+            {activeTab === 'my-locations' && <MyLocationsTab />}
             {activeTab === 'map' && <MyMapTab />}
             {activeTab === 'reviews' && <ReviewsPhotosTab />}
             {activeTab === 'activities' && <ActivityTimelineTab />}
@@ -64,8 +72,11 @@ export function ProfileContentTabs() {
 function SavedPlacesTab() {
   const { t } = useTranslation();
   const { savedLocationIds, locations, toggleSaveLocation, setSelectedLocation, setDetailModalOpen } = useLocationStore();
+  const [currentPage, setCurrentPage] = useState(1);
   
   const savedItems = locations.filter(loc => savedLocationIds.includes(loc.id));
+  const totalPages = Math.ceil(savedItems.length / ITEMS_PER_PAGE);
+  const currentItems = savedItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   if (savedItems.length === 0) {
     return (
@@ -78,99 +89,176 @@ function SavedPlacesTab() {
   }
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {savedItems.map((location) => (
-        <div 
-          key={location.id} 
-          onClick={() => {
-            setSelectedLocation(location);
-            setDetailModalOpen(true);
-          }}
-          className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
-        >
-          {/* Background Image */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={location.imageUrl} 
-            alt={location.name} 
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 transition-opacity duration-500 group-hover:opacity-90"></div>
-
-          {/* Content Container */}
-          <div className="absolute inset-0 p-6 flex flex-col justify-between">
-            {/* Top Container: Tag + Heart */}
-            <div className="flex justify-between items-start">
-              <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-extrabold tracking-wider uppercase px-4 py-1.5 rounded-full shadow-sm">
-                {location.category}
-              </span>
-              <button 
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSaveLocation(location.id);
-                  }}
-                  className="bg-white/20 hover:bg-rose-500/80 backdrop-blur-md rounded-full p-2.5 text-white border border-white/30 transition-all hover:border-transparent"
-              >
-                <Heart className="w-4 h-4 fill-white" />
-              </button>
-            </div>
-
-            {/* Bottom Content */}
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h3 className="font-extrabold text-2xl text-white mb-2 leading-tight drop-shadow-md line-clamp-2">
-                  {location.name}
-                </h3>
-                <p className="text-slate-200 font-medium text-xs flex items-center gap-2">
-                  {location.distance} <span className="w-1 h-1 bg-slate-400 rounded-full"></span> Mui Ne Area
-                </p>
+    <div className="flex flex-col">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentItems.map((location) => (
+          <div 
+            key={location.id} 
+            onClick={() => {
+              setSelectedLocation(location);
+              setDetailModalOpen(true);
+            }}
+            className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
+          >
+            <img 
+              src={location.imageUrl} 
+              alt={location.name} 
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 transition-opacity duration-500 group-hover:opacity-90"></div>
+            <div className="absolute inset-0 p-6 flex flex-col justify-between">
+              <div className="flex justify-between items-start">
+                <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-xs font-extrabold tracking-wider uppercase px-4 py-1.5 rounded-full shadow-sm">
+                  {location.category}
+                </span>
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSaveLocation(location.id);
+                    }}
+                    className="bg-white/20 hover:bg-rose-500/80 backdrop-blur-md rounded-full p-2.5 text-white border border-white/30 transition-all hover:border-transparent"
+                >
+                  <Heart className="w-4 h-4 fill-white" />
+                </button>
               </div>
-              
-              {/* Rating floating tag */}
-              <div className="bg-white text-slate-800 font-bold text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl shrink-0 translate-y-1">
-                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                {location.rating}
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-2xl text-white mb-2 leading-tight drop-shadow-md line-clamp-2">
+                    {location.name}
+                  </h3>
+                  <p className="text-slate-200 font-medium text-xs flex items-center gap-2">
+                    {location.distance} <span className="w-1 h-1 bg-slate-400 rounded-full"></span> Mui Ne Area
+                  </p>
+                </div>
+                <div className="bg-white text-slate-800 font-bold text-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl shrink-0 translate-y-1">
+                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                  {location.rating}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      {(totalPages > 1) && (
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      )}
+    </div>
+  );
+}
+
+function MyLocationsTab() {
+  const { t } = useTranslation();
+  const [locations, setLocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const { loadLocation } = useAddLocationStore();
+
+  useEffect(() => {
+    fetch('/api/profile/locations')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setLocations(data);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      })
+  }, []);
+
+  if (loading) {
+     return <div className="py-20 text-center text-slate-500">Loading...</div>;
+  }
+
+  if (locations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <MapPin className="w-12 h-12 text-slate-200 dark:text-slate-700 mb-4" />
+        <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">{t.profile.noLocations || "Bạn chưa gửi địa điểm nào."}</p>
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(locations.length / ITEMS_PER_PAGE);
+  const currentItems = locations.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  return (
+    <div className="flex flex-col">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentItems.map((location) => (
+          <div key={location.id} className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group">
+            <img src={location.imageUrl} alt={location.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 transition-opacity duration-500 group-hover:opacity-90"></div>
+            
+            <div className="absolute inset-0 p-6 flex flex-col justify-between">
+              <div className="flex justify-between items-start">
+                <span className={`text-[10px] font-extrabold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm text-white ${location.status === 'APPROVED' ? 'bg-green-500/80 border-green-400' : 'bg-amber-500/80 border-amber-400'} backdrop-blur-md border`}>
+                  {location.status === 'APPROVED' ? (t.profile.approved || "Đã duyệt") : (t.profile.pending || "Đang chờ")}
+                </span>
+                {location.status === 'PENDING' && (
+                    <button 
+                      onClick={() => {
+                          loadLocation(location);
+                          router.push('/add-location');
+                      }}
+                      className="bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full p-2.5 text-white border border-white/30 transition-all flex items-center gap-1.5 text-xs font-bold"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                )}
+              </div>
+              
+              <div>
+                 <h3 className="font-extrabold text-xl text-white mb-1 leading-tight drop-shadow-md line-clamp-2">
+                   {location.name}
+                 </h3>
+                 <p className="text-slate-200 font-medium text-xs">
+                   {location.category}
+                 </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {(totalPages > 1) && (
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      )}
     </div>
   );
 }
 
 function MyMapTab() {
   return (
-    <div className="h-[450px] relative rounded-[2rem] overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
-       <div className="absolute inset-0 bg-slate-100 dark:bg-slate-900 flex items-center justify-center transition-colors">
-          <div className="text-center p-8">
-             <Globe className="w-12 h-12 text-[#0077b6] dark:text-[#38bdf8] mx-auto mb-4 opacity-30 animate-pulse" />
-             <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Map data is loading...</p>
-             <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-2 uppercase tracking-tighter">Your 12 markers are being processed</p>
-          </div>
-       </div>
+    <div className="h-[600px] relative rounded-[2rem] overflow-hidden border-2 border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+       <Map />
     </div>
   );
 }
 
 function ReviewsPhotosTab() {
-  const { locations, setSelectedLocation, setDetailModalOpen } = useLocationStore();
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const allReviews = locations.flatMap((loc) => {
-    if (!loc.reviews) return [];
-    return loc.reviews.map((rev) => ({
-      ...rev,
-      location: loc,
-      locationName: loc.name,
-      bgImage: loc.imageUrl,
-    }));
-  });
+  useEffect(() => {
+    fetch('/api/profile/reviews')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setReviews(data);
+        }
+        setLoading(false);
+      });
+  }, []);
 
-  allReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (loading) {
+     return <div className="py-20 text-center text-slate-500">Loading...</div>;
+  }
 
-  if (allReviews.length === 0) {
+  if (reviews.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <MessageSquare className="w-12 h-12 text-slate-200 dark:text-slate-700 mb-4" />
@@ -180,49 +268,47 @@ function ReviewsPhotosTab() {
     );
   }
 
+  const totalPages = Math.ceil(reviews.length / ITEMS_PER_PAGE);
+  const currentItems = reviews.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {allReviews.map((rev) => (
-         <div 
-           key={rev.id} 
-           onClick={() => {
-             setSelectedLocation(rev.location);
-             setDetailModalOpen(true);
-           }}
-           className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
-         >
-           {/* Background Image */}
-           <img src={rev.bgImage} alt={rev.locationName} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-           
-           {/* Gradient Overlay */}
-           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20 transition-opacity duration-500 group-hover:opacity-100"></div>
+    <div className="flex flex-col">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {currentItems.map((rev) => (
+           <div 
+             key={rev.id} 
+             className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group cursor-pointer"
+           >
+             <img src={rev.bgImage} alt={rev.locationName} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/20 transition-opacity duration-500 group-hover:opacity-100"></div>
 
-           {/* Content Container */}
-           <div className="absolute inset-0 p-6 flex flex-col justify-between">
-             {/* Top Container: Location Tag + Rating */}
-             <div className="flex justify-between items-start gap-2">
-                <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-[10px] font-extrabold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm truncate">
-                  {rev.locationName}
-                </span>
-                <div className="flex gap-0.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full shrink-0">
-                   {[...Array(5)].map((_, i) => (
-                     <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-md' : 'text-slate-500/50 fill-transparent'}`} />
-                   ))}
-                </div>
-             </div>
+             <div className="absolute inset-0 p-6 flex flex-col justify-between">
+               <div className="flex justify-between items-start gap-2">
+                  <span className="bg-white/20 backdrop-blur-md text-white border border-white/30 text-[10px] font-extrabold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm truncate">
+                    {rev.locationName}
+                  </span>
+                  <div className="flex gap-0.5 bg-black/40 backdrop-blur-sm px-2.5 py-1.5 rounded-full shrink-0">
+                     {[...Array(5)].map((_, i) => (
+                       <Star key={i} className={`w-3 h-3 ${i < rev.rating ? 'fill-yellow-400 text-yellow-400 drop-shadow-md' : 'text-slate-500/50 fill-transparent'}`} />
+                     ))}
+                  </div>
+               </div>
 
-             {/* Bottom Content: Review Text */}
-             <div>
-                <h4 className="text-white font-extrabold text-xl leading-tight mb-2 line-clamp-1 drop-shadow-md">{rev.userName}</h4>
-                <p className="text-slate-200 text-sm font-medium leading-relaxed line-clamp-3 mb-3">{rev.comment}</p>
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                  <MessageSquare className="w-3 h-3" />
-                  {new Date(rev.date).toLocaleDateString('vi-VN')}
-                </div>
+               <div>
+                  <h4 className="text-white font-extrabold text-xl leading-tight mb-2 line-clamp-1 drop-shadow-md">{rev.userName}</h4>
+                  <p className="text-slate-200 text-sm font-medium leading-relaxed line-clamp-3 mb-3">{rev.comment}</p>
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                    <MessageSquare className="w-3 h-3" />
+                    {rev.date}
+                  </div>
+               </div>
              </div>
            </div>
-         </div>
-      ))}
+        ))}
+      </div>
+      {(totalPages > 1) && (
+        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      )}
     </div>
   );
 }
@@ -238,7 +324,6 @@ function ActivityTimelineTab() {
     <div className="space-y-8 py-4 pl-4">
        {events.map((ev, idx) => (
          <div key={ev.id} className="relative flex gap-6 group">
-            {/* Timeline Line */}
             {idx !== events.length - 1 && (
                <div className="absolute left-[11px] top-10 w-[2px] h-10 bg-slate-100 dark:bg-slate-800 transition-colors" />
             )}
