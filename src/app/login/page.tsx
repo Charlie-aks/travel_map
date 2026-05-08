@@ -10,8 +10,8 @@ import { signIn, getSession, useSession } from 'next-auth/react';
 export default function LoginPage() {
   const router = useRouter();
   const login = useProfileStore(state => state.login);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@gmail.com');
+  const [password, setPassword] = useState('1234');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
@@ -110,9 +110,19 @@ export default function LoginPage() {
             <h1 className="text-[40px] font-black text-slate-900 tracking-tight mb-2">
               Welcome Back
             </h1>
-            <p className="text-slate-600 text-lg mb-12 font-medium">
+            <p className="text-slate-600 text-lg mb-4 font-medium">
               Continue your coastal journey.
             </p>
+            
+            <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+              <p className="text-sm font-semibold text-blue-800">
+                💡 Gợi ý cho Nhà tuyển dụng (Demo):
+                <br />
+                Tài khoản: <span className="font-black">admin@gmail.com</span>
+                <br />
+                Mật khẩu: <span className="font-black">1234</span>
+              </p>
+            </div>
 
             <form className="space-y-6" onSubmit={handleLogin}>
               <div>
@@ -121,7 +131,7 @@ export default function LoginPage() {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="concierge@example.com" 
+                  placeholder="admin@gmail.com" 
                   className="w-full bg-[#f1f3f5] text-slate-800 px-4 py-3.5 rounded-xl border-none focus:ring-2 focus:ring-[#0077b6] outline-none transition-all placeholder:text-slate-400 font-medium"
                 />
               </div>
