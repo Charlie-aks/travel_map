@@ -27,15 +27,35 @@ export default function AddLocationForm() {
   const { profile } = useProfileStore();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateField('imageUrl', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        updateField('imageUrl', data.url);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Tải ảnh lên thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -219,12 +239,19 @@ export default function AddLocationForm() {
             accept="image/*" 
             className="hidden" 
             onChange={handleImageUpload} 
+            disabled={isUploadingImage}
           />
           {imageUrl ? (
              <div className="flex flex-col items-center">
                <CheckCircle2 className="w-10 h-10 text-green-500 mb-3" />
                <p className="font-bold text-slate-800 dark:text-slate-200 transition-colors">{t.addLocationForm.imageUploaded}</p>
                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 transition-colors">{t.addLocationForm.checkPreview}</p>
+             </div>
+          ) : isUploadingImage ? (
+             <div className="flex flex-col items-center">
+               <div className="w-10 h-10 border-4 border-[#0077b6]/30 border-t-[#0077b6] rounded-full animate-spin mb-3"></div>
+               <h3 className="font-bold text-slate-800 dark:text-slate-200 transition-colors">Đang tải ảnh lên...</h3>
+               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 transition-colors">Vui lòng chờ trong giây lát</p>
              </div>
           ) : (
             <>
