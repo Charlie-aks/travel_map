@@ -5,6 +5,40 @@ import { eq } from 'drizzle-orm';
 import { Location } from '@/constants/mock-data';
 import { auth } from '@/auth';
 import { users } from '@/db/schema';
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const existing = await db.select().from(locations).where(eq(locations.id, id));
+    if (!existing || existing.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const loc = existing[0];
+    const coords = (loc.coordinates as [number, number]) || [0, 0];
+    
+    const responseLocation: Location = { 
+      id: loc.id,
+      name: loc.title,
+      description: loc.description || '',
+      category: loc.category as any,
+      rating: 5.0,
+      reviewsCount: 'New',
+      distance: 'Local',
+      lat: coords[0],
+      lng: coords[1],
+      imageUrl: loc.imageUrl,
+      address: loc.address || '',
+      bestTiming: loc.bestTiming || '',
+      price: loc.price || '',
+      contact: loc.contact || '',
+      status: (loc.status as any) || 'APPROVED',
+    };
+    return NextResponse.json(responseLocation);
+  } catch (error: any) {
+    console.error("Failed to fetch location:", error);
+    return NextResponse.json({ error: "Failed to fetch location" }, { status: 500 });
+  }
+}
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();

@@ -16,6 +16,8 @@ import {
   Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAddLocationStore } from "@/store/useAddLocationStore";
 import { LocationRowActions } from "./LocationRowActions";
 import { LocationDetailModal } from "./LocationDetailModal";
 
@@ -37,6 +39,8 @@ const CATEGORIES = ["ALL", "Dining", "Stay", "Cultural", "Beaches"];
 const STATUSES = ["ALL", "APPROVED", "PENDING"];
 
 export default function LocationManagementPage() {
+  const router = useRouter();
+  const { loadLocation } = useAddLocationStore();
   const [locations, setLocations] = useState<LocationRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -52,6 +56,21 @@ export default function LocationManagementPage() {
     setIsMounted(true);
     fetchLocations();
   }, [activeCategory, activeStatus]);
+
+  const handleEdit = async (loc: any) => {
+    try {
+      const res = await fetch(`/api/locations/${loc.id}`);
+      if (res.ok) {
+        const fullLocation = await res.json();
+        loadLocation(fullLocation);
+        router.push('/add-location?edit=true');
+      } else {
+        console.error("Failed to fetch full location details");
+      }
+    } catch (error) {
+      console.error("Error fetching location details:", error);
+    }
+  };
 
   const fetchLocations = async () => {
     setIsLoading(true);
@@ -261,7 +280,13 @@ export default function LocationManagementPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <LocationRowActions id={loc.id} status={loc.status} onView={() => setSelectedLocation(loc)} />
+                    <LocationRowActions 
+                      id={loc.id} 
+                      status={loc.status} 
+                      onView={() => setSelectedLocation(loc)} 
+                      onEdit={() => handleEdit(loc)}
+                      onActionComplete={fetchLocations} 
+                    />
                   </td>
                 </tr>
               ))}

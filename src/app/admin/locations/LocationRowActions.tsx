@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckCircle, Trash2, Eye } from "lucide-react";
+import { CheckCircle, Trash2, Eye, Edit2 } from "lucide-react";
 import { useTransition } from "react";
 import { approveLocationAction, deleteLocationAction } from "@/lib/actions/admin";
 
-export function LocationRowActions({ id, status, onView }: { id: string, status: string | null, onView?: () => void }) {
+export function LocationRowActions({ id, status, onView, onEdit, onActionComplete }: { id: string, status: string | null, onView?: () => void, onEdit?: () => void, onActionComplete?: () => void }) {
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -15,6 +15,7 @@ export function LocationRowActions({ id, status, onView }: { id: string, status:
           onClick={() => {
             startTransition(async () => {
               await approveLocationAction(id);
+              onActionComplete?.();
             });
           }}
           className="p-2.5 text-slate-400 hover:text-[#48bb78] hover:bg-[#48bb78]/10 rounded-full transition-all border border-transparent disabled:opacity-50"
@@ -33,10 +34,19 @@ export function LocationRowActions({ id, status, onView }: { id: string, status:
       </button>
       <button 
         disabled={isPending}
+        onClick={onEdit}
+        className="p-2.5 text-slate-400 hover:text-[#006e9b] hover:bg-blue-50 rounded-full transition-all border border-transparent flex items-center justify-center cursor-pointer"
+        title="Chỉnh sửa"
+      >
+        <Edit2 className="w-4 h-4" />
+      </button>
+      <button 
+        disabled={isPending}
         onClick={() => {
           if(confirm("Bạn có chắc chắn muốn xóa địa điểm này không? Hành động này không thể hoàn tác.")) {
             startTransition(async () => {
               await deleteLocationAction(id);
+              onActionComplete?.();
             });
           }
         }}

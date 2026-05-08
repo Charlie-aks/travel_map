@@ -7,7 +7,15 @@ import { revalidatePath } from "next/cache";
 
 export async function approveLocationAction(id: string) {
   try {
-    await db.update(locations).set({ status: 'APPROVED' }).where(eq(locations.id, id));
+    const loc = await db.select().from(locations).where(eq(locations.id, id));
+    if (loc && loc.length > 0) {
+      let title = loc[0].title;
+      // Remove the prefix if it exists
+      if (title.startsWith('[Yêu cầu sửa] ')) {
+        title = title.replace('[Yêu cầu sửa] ', '');
+      }
+      await db.update(locations).set({ status: 'APPROVED', title }).where(eq(locations.id, id));
+    }
     revalidatePath("/admin/locations");
     revalidatePath("/");
     return { success: true };

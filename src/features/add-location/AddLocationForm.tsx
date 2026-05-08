@@ -3,6 +3,7 @@
 import React from "react";
 import { useAddLocationStore } from "@/store/useAddLocationStore";
 import { useLocationStore } from "@/store/useLocationStore";
+import { useProfileStore } from "@/store/useProfileStore";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
@@ -23,6 +24,7 @@ export default function AddLocationForm() {
   const { t } = useTranslation();
   const { name, updateField, address, category, description, imageUrl, lat, lng, editingId, reset, bestTiming, price, contact } = useAddLocationStore();
   const { addLocation, updateLocation } = useLocationStore();
+  const { profile } = useProfileStore();
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -45,7 +47,7 @@ export default function AddLocationForm() {
 
     setIsSubmitting(true);
     try {
-      if (editingId) {
+      if (editingId && profile?.role === 'ADMIN') {
         await updateLocation(editingId, {
           name,
           category: category as Category,
@@ -59,9 +61,10 @@ export default function AddLocationForm() {
           imageUrl: imageUrl || 'https://images.unsplash.com/photo-1629809819614-72a3928a3070?q=80&w=1000&auto=format&fit=crop',
         });
       } else {
+        const isEditRequest = !!editingId;
         const newSpot: Location = {
           id: Math.random().toString(36).substr(2, 9),
-          name,
+          name: isEditRequest ? `[Yêu cầu sửa] ${name}` : name,
           category: category as Category,
           address,
           description,
@@ -273,10 +276,10 @@ export default function AddLocationForm() {
           {isSubmitting ? (
              <div className="flex items-center justify-center gap-2">
                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-               <span>{editingId ? "Updating..." : "Publishing..."}</span>
+               <span>{editingId ? "Đang xử lý..." : "Publishing..."}</span>
              </div>
           ) : (
-            editingId ? "Update Location" : t.addLocationForm.publishLocation
+            editingId ? (profile?.role === 'ADMIN' ? "Update Location" : "Gửi yêu cầu sửa đổi") : t.addLocationForm.publishLocation
           )}
         </button>
       </div>
