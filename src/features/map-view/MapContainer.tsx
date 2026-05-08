@@ -107,15 +107,26 @@ function MapViewUpdater() {
 
 import { useTranslation } from "@/i18n/useTranslation";
 
+import { useSettingsStore } from "@/store/useSettingsStore";
+
 export default function CustomMapContainer() {
   const { locations, selectedLocation, setSelectedLocation, routingDestination, setRoutingDestination } = useLocationStore();
+  const { mapStyle } = useSettingsStore();
   const { t } = useTranslation();
   const center: L.LatLngExpression = [10.9333, 108.1000]; // Phan Thiet Central
+
+  const tileUrl = mapStyle === 'satellite' 
+    ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    
+  const attribution = mapStyle === 'satellite'
+    ? 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   return (
     <div className="w-full h-full relative z-0">
       {routingDestination && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-1000">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000]">
           <div className="bg-white dark:bg-slate-900 px-5 py-3 rounded-full shadow-lg border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
             <div className="flex flex-col items-start mr-4 max-w-[150px] md:max-w-xs">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1 transition-colors">{t.map.routingTo}</span>
@@ -139,8 +150,8 @@ export default function CustomMapContainer() {
         zoomControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={attribution}
+          url={tileUrl}
         />
         
         {locations.map((location) => {

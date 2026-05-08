@@ -17,6 +17,7 @@ export type Role = 'USER' | 'ADMIN';
 
 export interface UserProfile {
   fullName: string;
+  email?: string;
   bio: string;
   hometown: string;
   website: string;
@@ -103,6 +104,7 @@ export const useProfileStore = create<ProfileState>()(
           ...state.profile, 
           fullName: name, 
           role,
+          ...(email ? { email } : {}),
           ...(avatarUrl ? { avatarUrl } : {})
         }
       })),
