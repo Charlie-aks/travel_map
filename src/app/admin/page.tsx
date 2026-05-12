@@ -2,7 +2,7 @@
 
 import { Plus, TrendingUp, MapPin, Users, AlertTriangle, ChevronDown, FileText, Loader2, Bookmark, MessageSquare, Star } from "lucide-react";
 import { VisitorChart } from "./components/VisitorChart";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface Activity {
   id: string;
@@ -22,6 +22,8 @@ interface OverviewData {
     pendingReports: number;
   };
   activities: Activity[];
+  heatmap: { category: string; count: number }[];
+  trends: { name: string; locations: number; reviews: number }[];
 }
 
 export default function AdminDashboard() {
@@ -62,6 +64,20 @@ export default function AdminDashboard() {
     if (diffInHours < 24) return `${diffInHours} giờ trước`;
     return then.toLocaleDateString("vi-VN");
   };
+
+  // Helper to process heatmap data
+  const processedHeatmap = useMemo(() => {
+    if (!data?.heatmap || data.heatmap.length === 0) return [];
+    const total = data.heatmap.reduce((sum, item) => sum + item.count, 0);
+    if (total === 0) return [];
+    
+    const colors = ["#8c5929", "#1b5e82", "#6a755d", "#da7f47", "#3076cc"];
+    return data.heatmap.map((item, index) => ({
+      name: item.category,
+      percentage: Math.round((item.count / total) * 100),
+      color: colors[index % colors.length]
+    })).sort((a, b) => b.percentage - a.percentage);
+  }, [data?.heatmap]);
 
   if (!isMounted) return null;
 
@@ -154,14 +170,20 @@ export default function AdminDashboard() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-8 gap-4">
             <div>
               <h2 className="text-xl font-bold text-[#0c2b48]">Visitor Trends</h2>
-              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Monthly traffic volume in Phan Thiet regions</p>
+              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Creations volume in last 7 days</p>
             </div>
             <button className="flex items-center justify-between w-full sm:w-auto gap-1.5 px-4 py-2 bg-[#f4f5f7] hover:bg-slate-200 rounded-full text-[13px] font-bold text-[#0c2b48] transition-colors">
-              <span>Last 30 Days</span> <ChevronDown className="w-4 h-4 ml-0.5" />
+              <span>Last 7 Days</span> <ChevronDown className="w-4 h-4 ml-0.5" />
             </button>
           </div>
           <div className="flex-1 w-full relative min-h-[300px]">
-            <VisitorChart />
+            {isLoading ? (
+               <div className="flex flex-col items-center justify-center h-full opacity-20">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+               </div>
+            ) : (
+              <VisitorChart data={data?.trends?.map(t => ({...t, locations: Number(t.locations), reviews: Number(t.reviews)}))} />
+            )}
           </div>
         </div>
 
@@ -216,27 +238,21 @@ export default function AdminDashboard() {
           
           <div className="relative z-10 h-full flex flex-col">
             <h2 className="text-xl font-bold text-[#0c2b48]">Contribution Heatmap</h2>
-            <p className="text-xs font-bold text-slate-500 mt-1 mb-8 uppercase tracking-widest">Visual density of new user contributions</p>
+            <p className="text-xs font-bold text-slate-500 mt-1 mb-8 uppercase tracking-widest">Locations by Category</p>
             
             <div className="space-y-6 flex-1 flex flex-col justify-end">
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-3 rounded-full bg-white/60 overflow-hidden shadow-sm">
-                  <div className="h-full bg-[#8c5929] rounded-full" style={{ width: '85%' }}></div>
+              {isLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin opacity-20 mx-auto" />
+              ) : processedHeatmap.length > 0 ? processedHeatmap.slice(0, 3).map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4">
+                  <div className="flex-1 h-3 rounded-full bg-white/60 overflow-hidden shadow-sm">
+                    <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${item.percentage}%`, backgroundColor: item.color }}></div>
+                  </div>
+                  <span className="text-sm font-bold text-[#0c2b48] w-40 text-right">{item.name} ({item.percentage}%)</span>
                 </div>
-                <span className="text-sm font-bold text-[#0c2b48] w-40 text-right">Ham Tien (85%)</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-3 rounded-full bg-white/60 overflow-hidden shadow-sm">
-                  <div className="h-full bg-[#1b5e82] rounded-full" style={{ width: '60%' }}></div>
-                </div>
-                <span className="text-sm font-bold text-[#0c2b48] w-40 text-right">Mui Ne (60%)</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 h-3 rounded-full bg-white/60 overflow-hidden shadow-sm">
-                  <div className="h-full bg-[#6a755d] rounded-full" style={{ width: '40%' }}></div>
-                </div>
-                <span className="text-sm font-bold text-[#0c2b48] w-40 text-right">Phan Thiet City (40%)</span>
-              </div>
+              )) : (
+                <p className="text-xs font-bold text-slate-400">No data available</p>
+              )}
             </div>
           </div>
         </div>

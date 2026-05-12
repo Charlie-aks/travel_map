@@ -67,6 +67,16 @@ export const savedLocations = pgTable("saved_location", {
   compoundKey: primaryKey({ columns: [t.userId, t.locationId] }),
 }));
 
+export const reports = pgTable("report", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  reporterId: text("reporterId").notNull().references(() => users.id),
+  targetId: text("targetId").notNull(), // can be reviewId or locationId
+  targetType: text("targetType").notNull(), // 'REVIEW' or 'LOCATION'
+  reason: text("reason").notNull(),
+  status: text("status").default("PENDING"), // PENDING, RESOLVED, DISMISSED
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
 import { relations } from "drizzle-orm";
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -104,4 +114,12 @@ export const savedLocationsRelations = relations(savedLocations, ({ one }) => ({
     fields: [savedLocations.locationId],
     references: [locations.id],
   }),
+}));
+
+export const reportsRelations = relations(reports, ({ one }) => ({
+  reporter: one(users, {
+    fields: [reports.reporterId],
+    references: [users.id],
+  }),
+  // For simplicity, we can't easily union join targetType here, so we will fetch reviews manually or left join
 }));

@@ -33,12 +33,16 @@ const createCustomIcon = (isSelected: boolean) => {
 };
 
 import { useState } from "react";
+import MarkerClusterGroup from 'react-leaflet-cluster';
+import { useTranslation } from "@/i18n/useTranslation";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 function RoutingControl() {
   const map = useMap();
   const routingDestination = useLocationStore((state) => state.routingDestination);
   const setRoutingDestination = useLocationStore((state) => state.setRoutingDestination);
   const [routePath, setRoutePath] = useState<[number, number][]>([]);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (!routingDestination) {
@@ -46,10 +50,10 @@ function RoutingControl() {
       return;
     }
 
-    const start = [10.9333, 108.1000] as [number, number]; // Phan Thiet Central
+    const defaultStart = [10.9333, 108.1000] as [number, number]; // Phan Thiet Central
     const end = [routingDestination.lat, routingDestination.lng] as [number, number];
 
-    const fetchRoute = async () => {
+    const fetchRoute = async (start: [number, number], end: [number, number]) => {
       try {
         const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`);
         const data = await res.json();
@@ -67,17 +71,34 @@ function RoutingControl() {
       }
     };
 
-    fetchRoute();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const start = [position.coords.latitude, position.coords.longitude] as [number, number];
+          setUserLocation(start);
+          fetchRoute(start, end);
+        },
+        () => {
+          setUserLocation(defaultStart);
+          fetchRoute(defaultStart, end);
+        }
+      );
+    } else {
+      setUserLocation(defaultStart);
+      fetchRoute(defaultStart, end);
+    }
   }, [routingDestination, map]);
 
   if (!routingDestination || routePath.length === 0) return null;
+
+  const startPoint = userLocation || [10.9333, 108.1000];
 
   return (
     <>
       <Polyline positions={routePath} color="#1e40af" weight={6} opacity={0.8} dashArray="10, 10" />
       
       {/* Start Point Marker */}
-      <Marker position={[10.9333, 108.1000]} icon={L.divIcon({
+      <Marker position={startPoint} icon={L.divIcon({
         html: `<div class="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-md"></div>`,
         className: "",
         iconSize: [16, 16],
@@ -104,10 +125,6 @@ function MapViewUpdater() {
 
   return null;
 }
-
-import { useTranslation } from "@/i18n/useTranslation";
-
-import { useSettingsStore } from "@/store/useSettingsStore";
 
 export default function CustomMapContainer() {
   const { locations, selectedLocation, setSelectedLocation, routingDestination, setRoutingDestination } = useLocationStore();
@@ -154,38 +171,50 @@ export default function CustomMapContainer() {
           url={tileUrl}
         />
         
-        {locations.map((location) => {
-          const isSelected = selectedLocation?.id === location.id;
-          
-          return (
-            <Marker
-              key={location.id}
-              position={[location.lat, location.lng]}
-              icon={createCustomIcon(isSelected)}
-              eventHandlers={{
-                click: () => {
-                  setSelectedLocation(location);
-                },
-              }}
-            >
-              <Popup className="rounded-xl overflow-hidden shadow-xl border-0 p-0 m-0">
-                <div className="w-48">
-                  <div className="h-24 w-full bg-slate-200 overflow-hidden relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={location.imageUrl} alt={location.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-3 bg-white">
-                    <h3 className="font-semibold text-sm mb-1">{location.name}</h3>
-                    <div className="flex items-center text-xs text-slate-500 mb-2">
-                       <span className="text-yellow-500 mr-1">★</span> {location.rating}
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50}
+          iconCreateFunction={(cluster: any) => {
+            return L.divIcon({
+              html: `<div class="flex items-center justify-center w-10 h-10 bg-[#0077b6] text-white rounded-full font-bold shadow-lg ring-4 ring-[#0077b6]/30 border-2 border-white"><span>${cluster.getChildCount()}</span></div>`,
+              className: 'custom-cluster-icon',
+              iconSize: L.point(40, 40, true),
+            })
+          }}
+        >
+          {locations.map((location) => {
+            const isSelected = selectedLocation?.id === location.id;
+            
+            return (
+              <Marker
+                key={location.id}
+                position={[location.lat, location.lng]}
+                icon={createCustomIcon(isSelected)}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedLocation(location);
+                  },
+                }}
+              >
+                <Popup className="rounded-xl overflow-hidden shadow-xl border-0 p-0 m-0">
+                  <div className="w-48">
+                    <div className="h-24 w-full bg-slate-200 overflow-hidden relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={location.imageUrl} alt={location.name} className="w-full h-full object-cover" />
                     </div>
-                    <p className="text-xs text-slate-600 line-clamp-2">{location.description}</p>
+                    <div className="p-3 bg-white">
+                      <h3 className="font-semibold text-sm mb-1">{location.name}</h3>
+                      <div className="flex items-center text-xs text-slate-500 mb-2">
+                         <span className="text-yellow-500 mr-1">★</span> {location.rating}
+                      </div>
+                      <p className="text-xs text-slate-600 line-clamp-2">{location.description}</p>
+                    </div>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
 
         <RoutingControl />
         <MapViewUpdater />
