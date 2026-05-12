@@ -49,9 +49,10 @@ export default function CollectionsPage() {
       "Cultural": "văn hóa"
     };
 
-    const unsavedInFav = locations.filter(
-      loc => loc.category === favoriteCategory && !savedLocationIds.includes(loc.id)
-    );
+    // Find highest rated unsaved location in favorite category
+    const unsavedInFav = locations
+      .filter(loc => loc.category === favoriteCategory && !savedLocationIds.includes(loc.id))
+      .sort((a, b) => b.rating - a.rating);
 
     return {
       suggestedLocation: unsavedInFav.length > 0 ? unsavedInFav[0] : null,
@@ -59,18 +60,51 @@ export default function CollectionsPage() {
     };
   }, [savedLocations, locations, savedLocationIds]);
 
-  // 2. Lịch trình động
+  // Helper to calculate distance
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  };
+
+  // 2. Lịch trình động (AI/Dynamic Schedule based on coordinates)
   const schedule = useMemo(() => {
     if (savedLocations.length === 0) return [];
     
-    // Sort locations by ID to keep schedule deterministic, or could sort by category to group logically
-    const scheduleItems = [...savedLocations].slice(0, 3);
-    const times = ["08:30 AM", "12:00 PM", "15:30 PM"];
-    const actions = ["Tham quan", "Nghỉ ngơi tại", "Khám phá"];
+    const unvisited = [...savedLocations];
+    const scheduleItems = [];
+    
+    // Start with the first saved location
+    let current = unvisited.shift()!;
+    scheduleItems.push(current);
+
+    // Greedy Nearest Neighbor to build a logical path
+    while (unvisited.length > 0 && scheduleItems.length < 4) {
+      let nearestIdx = 0;
+      let minDistance = Infinity;
+      for (let i = 0; i < unvisited.length; i++) {
+        const dist = getDistance(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearestIdx = i;
+        }
+      }
+      current = unvisited[nearestIdx];
+      scheduleItems.push(current);
+      unvisited.splice(nearestIdx, 1);
+    }
+    
+    const times = ["08:30 AM", "12:00 PM", "15:30 PM", "19:00 PM"];
+    const actions = ["Khởi hành tại", "Ăn trưa/Nghỉ tại", "Buổi chiều ở", "Buổi tối tại"];
     
     return scheduleItems.map((loc, idx) => ({
-      time: times[idx],
-      action: actions[idx],
+      time: times[idx] || "Tối",
+      action: actions[idx] || "Tham quan",
       name: loc.name,
       id: loc.id
     }));
