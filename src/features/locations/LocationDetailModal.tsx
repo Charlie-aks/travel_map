@@ -69,7 +69,26 @@ function LocationDetailContent({ onClose }: { onClose: () => void }) {
             </div>
             
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 bg-black/30 hover:bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-full transition-colors font-semibold shadow-sm">
+              <button 
+                onClick={async () => {
+                  const shareUrl = `${window.location.origin}/locations/${selectedLocation.id}`;
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({
+                        title: `${selectedLocation.name} - Phan Thiet Travel Map`,
+                        text: selectedLocation.description || '',
+                        url: shareUrl,
+                      });
+                    } catch (err) {
+                      console.error('Share failed:', err);
+                    }
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    alert('Đã copy link!');
+                  }
+                }}
+                className="flex items-center gap-2 bg-black/30 hover:bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-full transition-colors font-semibold shadow-sm"
+              >
                 <Share className="w-4 h-4" /> {t.locationDetail.share}
               </button>
               <button 
