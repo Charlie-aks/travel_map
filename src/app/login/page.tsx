@@ -105,8 +105,8 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side - Form Panel */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 overflow-y-auto relative">
-          <div className="w-full max-w-[420px]">
+        <div className="flex-1 flex flex-col p-8 sm:p-12 overflow-y-auto">
+          <div className="w-full max-w-[420px] mx-auto my-auto py-8">
             <h1 className="text-[40px] font-black text-slate-900 tracking-tight mb-2">
               Welcome Back
             </h1>
@@ -184,7 +184,7 @@ export default function LoginPage() {
               <div className="h-[1px] bg-slate-100 flex-1"></div>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-8 ">
               <button 
                 type="button" 
                 onClick={() => signIn('google', { callbackUrl: '/' }, { prompt: 'select_account' })}
@@ -201,9 +201,9 @@ export default function LoginPage() {
           </div>
 
           {/* Floating Footer Pill */}
-          <div className="absolute bottom-6 mx-auto">
-            <div className="bg-[#f8f9fa] rounded-full px-8 py-3 flex items-center gap-6 shadow-sm border border-slate-200">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">© 2024 Phan Thiet Travel Map</span>
+          <div className="shrink-0 mt-auto mx-auto pb-6">
+            <div className="bg-[#f8f9fa] rounded-full px-6 py-3 flex items-center gap-4 sm:gap-6 shadow-sm border border-slate-200 flex-wrap justify-center">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">© 2024 Phan Thiet Travel Map</span>
               <div className="flex gap-4">
                 <Link href="#" className="text-[10px] font-black text-[#0077b6] uppercase tracking-widest hover:text-[#005f92]">Privacy</Link>
                 <Link href="#" className="text-[10px] font-black text-[#0077b6] uppercase tracking-widest hover:text-[#005f92]">Terms</Link>
