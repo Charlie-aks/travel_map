@@ -7,6 +7,7 @@ import { LocationDetailModal } from "@/features/locations/LocationDetailModal";
 import { Providers } from "@/components/Providers";
 import { CommandMenu } from "@/components/layout/CommandMenu";
 import TravelChat from "@/components/chat/TravelChat";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
           <CommandMenu />
           <TravelChat />
         </Providers>
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || "G-YOUR_GA_ID_HERE"} />
       </body>
     </html>
   );
