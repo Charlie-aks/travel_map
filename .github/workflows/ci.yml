@@ -33,6 +33,12 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Node 22 trên runner đi kèm npm 10, còn package-lock.json được tạo bằng npm 11.
+      # npm 10 xử lý peer dependency tùy chọn khác (fdir → picomatch) nên `npm ci` báo lệch.
+      # Giữ bản npm này trùng với bản ở máy dev.
+      - name: Dùng npm 11 (trùng máy dev)
+        run: npm install -g npm@11.1.0 --no-audit --no-fund
+
       - name: Cài dependency
         run: npm ci --no-audit --no-fund
 
@@ -67,6 +73,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # Node 22 trên runner đi kèm npm 10, còn package-lock.json được tạo bằng npm 11.
+      # npm 10 xử lý peer dependency tùy chọn khác (fdir → picomatch) nên `npm ci` báo lệch.
+      # Giữ bản npm này trùng với bản ở máy dev.
+      - name: Dùng npm 11 (trùng máy dev)
+        run: npm install -g npm@11.1.0 --no-audit --no-fund
 
       - name: Cài dependency
         run: npm ci --no-audit --no-fund
