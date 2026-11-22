@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Category, Location, Review } from '../constants/mock-data';
 import { parseReviewsCount, formatReviewsCount } from '../lib/utils';
 import { useProfileStore } from './useProfileStore';
+import { apiErrorMessage, readApiError } from '../i18n/apiError';
 
 interface LocationState {
   selectedLocation: Location | null;
@@ -85,7 +86,7 @@ export const useLocationStore = create<LocationState>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(location),
           });
-          if (!res.ok) throw new Error('Failed to add location');
+          if (!res.ok) throw new Error(await readApiError(res));
           // Không thêm trực tiếp `newLocation` vào state.locations nữa vì cần đợi Admin duyệt
           set({ isLoading: false });
           
@@ -95,8 +96,10 @@ export const useLocationStore = create<LocationState>()(
           profileState.incrementBadgeProgress('builder', 1);
           profileState.incrementBadgeProgress('guide', 1);
           profileState.addXp(50);
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : apiErrorMessage();
+          set({ error: message, isLoading: false });
+          throw new Error(message); // để form hiển thị lỗi thay vì báo thành công
         }
       },
 
@@ -108,14 +111,19 @@ export const useLocationStore = create<LocationState>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedData),
           });
-          if (!res.ok) throw new Error('Failed to update location');
-          const updatedLoc = await res.json();
+          if (!res.ok) throw new Error(await readApiError(res));
+          const updatedLoc: Location = await res.json();
           set((state) => ({
-            locations: state.locations.map(loc => loc.id === id ? updatedLoc : loc),
+            // Giữ rating/số review hiện có — API sửa địa điểm không tính lại các số này
+            locations: state.locations.map(loc =>
+              loc.id === id ? { ...loc, ...updatedLoc, rating: loc.rating, reviewsCount: loc.reviewsCount } : loc
+            ),
             isLoading: false
           }));
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : apiErrorMessage();
+          set({ error: message, isLoading: false });
+          throw new Error(message);
         }
       },
 
@@ -123,14 +131,16 @@ export const useLocationStore = create<LocationState>()(
         set({ isLoading: true, error: null });
         try {
           const res = await fetch(`/api/locations/${id}`, { method: 'DELETE' });
-          if (!res.ok) throw new Error('Failed to delete location');
+          if (!res.ok) throw new Error(await readApiError(res));
           set((state) => ({
             locations: state.locations.filter(loc => loc.id !== id),
             selectedLocation: state.selectedLocation?.id === id ? null : state.selectedLocation,
             isLoading: false
           }));
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : apiErrorMessage();
+          set({ error: message, isLoading: false });
+          alert(message);
         }
       },
 
@@ -149,8 +159,7 @@ export const useLocationStore = create<LocationState>()(
           });
 
           if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Failed to post review');
+            throw new Error(await readApiError(res));
           }
 
           // Force re-fetch locations to get updated ratings and reviews

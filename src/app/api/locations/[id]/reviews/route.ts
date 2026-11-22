@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { eq, desc } from 'drizzle-orm';
 import { reviews } from '@/db/schema';
+import { handleRouteError } from '@/lib/route-error';
 
 export async function GET(
   req: Request,
@@ -15,7 +16,7 @@ export async function GET(
         eq(reviews.status, 'PUBLISHED')
       ),
       with: {
-        author: true
+        author: { columns: { name: true, image: true } }
       },
       orderBy: [desc(reviews.createdAt)]
     });
@@ -32,7 +33,6 @@ export async function GET(
 
     return NextResponse.json(mappedReviews);
   } catch (error) {
-    console.error("Failed to fetch location reviews:", error);
-    return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
+    return handleRouteError(error, "GET /api/locations/[id]/reviews");
   }
 }

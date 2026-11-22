@@ -1,4 +1,17 @@
 export const en = {
+  apiErrors: {
+    unauthorized: "Please sign in to continue.",
+    forbidden: "You don't have permission to do this.",
+    demoReadOnly: "The demo account is read-only — changes are disabled.",
+    invalidInput: "Some information is invalid. Please check and try again.",
+    notFound: "Not found.",
+    generic: "Something went wrong. Please try again."
+  },
+  chat: {
+    loginRequired: "Sign in to chat with the AI travel assistant.",
+    loginButton: "Sign in",
+    tooLong: "Message is too long (max 1000 characters)."
+  },
   navbar: {
     title: "Phan Thiet",
     map: "Map",

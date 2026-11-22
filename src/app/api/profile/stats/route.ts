@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { reviews, locations, savedLocations } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
+import { handleRouteError } from "@/lib/route-error";
 
 export async function GET() {
   const session = await auth();
@@ -37,11 +38,7 @@ export async function GET() {
       spots: locationCountResult.value,
       saved: savedCountResult.value,
     });
-  } catch (error: any) {
-    console.error("Failed to fetch profile stats:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch stats", details: error.message },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleRouteError(error, "GET /api/profile/stats");
   }
 }

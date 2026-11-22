@@ -48,14 +48,16 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [x] UI admin hiển thị thông báo khi thao tác bị từ chối (`src/app/admin/components/action-feedback.ts`); trang users có bộ lọc DEMO
 
 ### 0.3 API công khai
-- [ ] `POST /api/locations`: bắt buộc đăng nhập, validate
-- [ ] `PUT/DELETE /api/locations/[id]`: validate; GET không lộ địa điểm chưa duyệt cho người ngoài
-- [ ] `POST /api/reviews`: rating 1–5, chỉ cho địa điểm đã duyệt
-- [ ] `POST /api/reports`: validate `targetType`, `reason`
-- [ ] `/api/upload`: bắt buộc đăng nhập, chỉ ảnh jpeg/png/webp/avif, tối đa 5 MB, tự sinh tên file
-- [ ] `/api/chat`: bắt buộc đăng nhập, giới hạn tin nhắn, bỏ log body và stack trace; UI mời đăng nhập
-- [ ] `/api/auth/register`, `/api/profile/update`: validate email, độ dài mật khẩu/tên
-- [ ] Không còn route nào trả `error.message`/stack ra client
+- [x] `POST /api/locations`: bắt buộc đăng nhập (chặn DEMO), validate bằng schema dùng chung `src/lib/validations/location.ts` (category enum, toạ độ hợp lệ, URL ảnh chỉ https hoặc đường dẫn nội bộ); `authorId`/`status` do server gán
+- [x] `PUT/DELETE /api/locations/[id]`: role đọc từ DB, validate + whitelist field; GET chỉ trả bản chưa duyệt cho chủ sở hữu hoặc ADMIN/DEMO; metadata trang địa điểm chỉ cho bản đã duyệt
+- [x] `POST /api/reviews`: rating số nguyên 1–5, nội dung ≤ 2000 ký tự, chỉ cho địa điểm đã duyệt
+- [x] `POST /api/reports`: `targetType` ∈ REVIEW/LOCATION, lý do ≤ 1000 ký tự, đối tượng phải tồn tại
+- [x] `/api/upload`: bắt buộc đăng nhập (chặn DEMO), chỉ jpeg/png/webp/avif, tối đa 5 MB, kiểm tra magic bytes, tên file do server sinh
+- [x] `/api/chat`: bắt buộc đăng nhập (DEMO được dùng), tối đa 30 tin, tin người dùng ≤ 1000 ký tự, không nhận role `system` từ client, bỏ log body và stack trace; UI hiện lời mời đăng nhập
+- [x] `/api/auth/register`: validate tên, email, mật khẩu 8–72 ký tự, xử lý trùng email đồng thời; `/api/profile/update`: tên 1–100 ký tự, chặn DEMO đổi tên
+- [x] `GET /api/locations/[id]/reviews` chỉ nạp tên + ảnh tác giả
+- [x] Không còn route nào trả `error.message`/stack ra client
+- [x] Client hiển thị lỗi theo `code` qua i18n (`src/i18n/apiError.ts`); form thêm địa điểm không còn báo "thành công" khi API từ chối
 
 ### 0.4 Cấu hình auth & tài khoản demo
 - [ ] NextAuth: `debug` chỉ bật ở development; tắt tự gộp tài khoản theo email
@@ -116,6 +118,8 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong 0.3: khoá và validate toàn bộ API công khai (locations, reviews, reports, upload, chat, register, profile), thông báo lỗi i18n phía client, chatbot yêu cầu đăng nhập. Kiểm tra: tsc 0 lỗi · security-scan sạch trên 20 file đã sửa (sửa script bỏ qua comment ở quy tắc upload) · lỗi lint còn lại đều có sẵn từ trước.
 
 - **2026-11-22** — Xong 0.1 + 0.2: helper phân quyền (role từ DB, role DEMO chỉ xem), sửa server action admin và toàn bộ `/api/admin/*`, che email cho DEMO, banner demo. Kiểm tra: tsc 0 lỗi · security-scan sạch trên 17 file đã sửa · lỗi lint còn lại đều có sẵn từ trước. Chưa chạy thử thực tế (cần DB + tài khoản DEMO — xem 0.4).
 

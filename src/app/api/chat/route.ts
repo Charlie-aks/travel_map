@@ -1,16 +1,50 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText, convertToModelMessages, type UIMessage } from 'ai';
 import { google } from '@ai-sdk/google';
+import { z } from 'zod';
 import { db } from '@/db';
 import { locations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireUser } from '@/lib/auth-guard';
+import { handleRouteError } from '@/lib/route-error';
 
 export const maxDuration = 30; // Vercel max duration limit if applicable
 
+const MAX_MESSAGES = 30;          // độ dài hội thoại tối đa gửi lên model
+const MAX_USER_TEXT = 1000;       // ký tự mỗi tin nhắn của người dùng
+const MAX_ASSISTANT_TEXT = 8000;  // tin trả lời cũ của model được gửi lại làm ngữ cảnh
+
+const textPart = z.object({ type: z.literal('text'), text: z.string() });
+
+// Chỉ nhận role user/assistant: client không được tự chèn system prompt.
+const messageSchema = z.looseObject({
+  id: z.string().max(100),
+  role: z.enum(['user', 'assistant']),
+  parts: z.array(z.looseObject({ type: z.string() })).max(50),
+});
+
+const bodySchema = z.object({
+  messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
+});
+
+function totalText(parts: { type: string }[]): number {
+  return parts.reduce((sum, p) => {
+    const parsed = textPart.safeParse(p);
+    return sum + (parsed.success ? parsed.data.text.length : 0);
+  }, 0);
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    console.log("API Body:", JSON.stringify(body));
-    const { messages } = body;
+    // Chatbot gọi Gemini — mỗi request tốn quota, nên bắt buộc đăng nhập (tài khoản DEMO vẫn dùng được).
+    await requireUser();
+
+    const { messages } = bodySchema.parse(await req.json());
+    for (const m of messages) {
+      const limit = m.role === 'user' ? MAX_USER_TEXT : MAX_ASSISTANT_TEXT;
+      if (totalText(m.parts) > limit) {
+        return Response.json({ error: 'Message too long', code: 'INVALID_INPUT' }, { status: 400 });
+      }
+    }
 
     // Lấy thông tin các địa điểm đã được duyệt để cung cấp làm bối cảnh (context/RAG) cho AI
     const approvedLocations = await db
@@ -22,7 +56,7 @@ export async function POST(req: Request) {
       .from(locations)
       .where(eq(locations.status, 'APPROVED'));
 
-    const locationsContext = approvedLocations.map((loc) => 
+    const locationsContext = approvedLocations.map((loc) =>
       `- ${loc.title} (${loc.category}): ${loc.description?.substring(0, 50)}...`
     ).join('\n');
 
@@ -41,26 +75,14 @@ Nguyên tắc:
 4. Trả lời ngắn ngọn, súc tích, format rõ ràng (dùng bullet points, in đậm tên địa điểm).
 `;
 
-    // Gọi Gemini Pro (streamText)
-    const result = await streamText({
-      model: google('gemini-2.5-flash'), // Use a supported available model
+    const result = streamText({
+      model: google('gemini-2.5-flash'),
       system: systemPrompt,
-      messages: await convertToModelMessages(messages),
-      // Trong tương lai, cấu hình tools ở đây để AI thực hiện hành động tự động thêm địa điểm.
-      /*
-      tools: {
-        saveLocation: tool({
-          description: 'Save a location to user collection',
-          parameters: z.object({ locationId: z.string() }),
-          execute: async ({ locationId }) => { ... },
-        })
-      }
-      */
+      messages: await convertToModelMessages(messages as unknown as UIMessage[]),
     });
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    console.error("Chat API Error:", error);
-    return new Response(JSON.stringify({ error: String(error), stack: error instanceof Error ? error.stack : undefined }), { status: 500, headers: {'Content-Type': 'application/json'} });
+    return handleRouteError(error, 'POST /api/chat');
   }
 }

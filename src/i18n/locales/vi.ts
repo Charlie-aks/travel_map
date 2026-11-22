@@ -1,4 +1,17 @@
 export const vi = {
+  apiErrors: {
+    unauthorized: "Vui lòng đăng nhập để tiếp tục.",
+    forbidden: "Bạn không có quyền thực hiện thao tác này.",
+    demoReadOnly: "Tài khoản demo chỉ có quyền xem — không thể thay đổi dữ liệu.",
+    invalidInput: "Dữ liệu chưa hợp lệ, vui lòng kiểm tra lại.",
+    notFound: "Không tìm thấy dữ liệu.",
+    generic: "Đã có lỗi xảy ra, vui lòng thử lại."
+  },
+  chat: {
+    loginRequired: "Đăng nhập để trò chuyện với trợ lý du lịch AI.",
+    loginButton: "Đăng nhập",
+    tooLong: "Tin nhắn quá dài (tối đa 1000 ký tự)."
+  },
   navbar: {
     title: "Phan Thiết",
     map: "Bản đồ",

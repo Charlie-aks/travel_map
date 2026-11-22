@@ -164,8 +164,10 @@ for (const { abs, rel } of files) {
   if (isApiRoute && rel.includes("/upload/")) {
     if (!/\.size\b/.test(text)) add("HIGH", rel, 1, "upload-no-size-limit", "Upload không kiểm tra kích thước file.");
     if (!/\.type\b/.test(text)) add("HIGH", rel, 1, "upload-no-type-check", "Upload không kiểm tra loại file (MIME).");
-    if (/file\.name/.test(text) && /writeFile/.test(text)) {
-      add("HIGH", rel, lineOf(text, text.indexOf("file.name")), "upload-user-filename",
+    // Bỏ comment dòng (// ...) để không báo nhầm khi comment nhắc tới file.name
+    const code = text.replace(/(^|[^:])\/\/.*$/gm, "$1");
+    if (/file\.name/.test(code) && /writeFile/.test(code)) {
+      add("HIGH", rel, lineOf(code, code.indexOf("file.name")), "upload-user-filename",
         "Dùng tên file do người dùng gửi khi ghi đĩa → nguy cơ path traversal. Tự sinh tên (randomUUID + ext đã kiểm tra).");
     }
   }

@@ -1,38 +1,58 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { z } from "zod";
 import { db } from "@/db";
-import { reviews } from "@/db/schema";
+import { locations, reviews } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireWriter } from "@/lib/auth-guard";
+import { handleRouteError } from "@/lib/route-error";
+
+const createReviewSchema = z.object({
+  locationId: z.string().min(1).max(100),
+  rating: z.number().int().min(1).max(5),
+  content: z.string().trim().max(2000).optional(),
+  isAnonymous: z.boolean().optional(),
+});
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized. Please log in to post a review." }, { status: 401 });
+    const user = await requireWriter();
+    const input = createReviewSchema.parse(await req.json());
+
+    // Chỉ review được địa điểm đã duyệt
+    const [loc] = await db
+      .select({ id: locations.id })
+      .from(locations)
+      .where(and(eq(locations.id, input.locationId), eq(locations.status, "APPROVED")))
+      .limit(1);
+    if (!loc) {
+      return NextResponse.json({ error: "Location not found", code: "NOT_FOUND" }, { status: 404 });
     }
 
-    const { locationId, rating, content, isAnonymous } = await req.json();
+    const [created] = await db
+      .insert(reviews)
+      .values({
+        locationId: input.locationId,
+        authorId: user.id,
+        rating: input.rating,
+        content: input.content ?? "",
+        isAnonymous: input.isAnonymous ?? false,
+        status: "PUBLISHED",
+      })
+      .returning({
+        id: reviews.id,
+        locationId: reviews.locationId,
+        rating: reviews.rating,
+        content: reviews.content,
+        isAnonymous: reviews.isAnonymous,
+        createdAt: reviews.createdAt,
+      });
 
-    if (!locationId || !rating) {
-      return NextResponse.json({ error: "Missing required fields: locationId and rating." }, { status: 400 });
-    }
-
-    const newReview = await db.insert(reviews).values({
-      locationId,
-      authorId: session.user.id,
-      rating: Math.round(rating),
-      content: content || "",
-      isAnonymous: isAnonymous || false,
-      status: "PUBLISHED", // Default to published as discussed
-    }).returning();
-
-    // Revalidate paths to show new review
     revalidatePath("/");
-    revalidatePath(`/admin/reports`);
+    revalidatePath("/admin/reports");
 
-    return NextResponse.json(newReview[0]);
-  } catch (error: any) {
-    console.error("Failed to post review:", error);
-    return NextResponse.json({ error: "Failed to post review", details: error.message }, { status: 500 });
+    return NextResponse.json(created, { status: 201 });
+  } catch (error) {
+    return handleRouteError(error, "POST /api/reviews");
   }
 }
