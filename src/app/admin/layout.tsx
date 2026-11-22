@@ -1,28 +1,21 @@
-import Link from "next/link";
-import { Search, Bell, HelpCircle, LayoutDashboard, MapPin, Users, FileText, Settings } from "lucide-react";
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { getAdminViewer } from "@/lib/auth-guard";
 import { AdminNavShell } from "./components/AdminNavShell";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
-  // If there's no session, no user, or the role is not ADMIN, redirect out.
-  if ((session?.user as any)?.role !== "ADMIN") {
-    redirect("/");
-  }
+  // ADMIN: toàn quyền. DEMO: chỉ xem (mọi thao tác ghi bị server từ chối).
+  // Role đọc từ DB. Lưu ý: layout chỉ điều khiển giao diện — API route và
+  // server action phải tự kiểm tra quyền.
+  const viewer = await getAdminViewer();
+  if (!viewer) redirect("/");
 
   const userContext = {
-    name: session?.user?.name || null,
-    image: session?.user?.image || null,
-    role: (session?.user as any)?.role || null
+    name: viewer.name || null,
+    image: viewer.image || null,
+    role: viewer.role,
   };
 
-  return (
-    <AdminNavShell userContext={userContext}>
-      {children}
-    </AdminNavShell>
-  );
+  return <AdminNavShell userContext={userContext}>{children}</AdminNavShell>;
 }

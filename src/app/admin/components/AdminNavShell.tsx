@@ -12,7 +12,8 @@ import {
   FileText, 
   Settings,
   Menu,
-  X
+  X,
+  Eye
 } from "lucide-react";
 import { AdminSearchBar } from "./AdminSearchBar";
 
@@ -137,6 +138,18 @@ export function AdminNavShell({ children, userContext }: AdminNavShellProps) {
         {/* Scrollable Content */}
         <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-10 custom-scrollbar">
           <div className="max-w-6xl mx-auto w-full pt-6 md:pt-4">
+            {userContext.role === "DEMO" && (
+              <div
+                role="status"
+                className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              >
+                <Eye className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>
+                  <span className="font-bold">Chế độ demo — chỉ xem.</span> Bạn có thể khám phá toàn bộ trang quản trị;
+                  các thao tác duyệt, xoá hay đổi quyền sẽ bị chặn và email người dùng được ẩn bớt.
+                </p>
+              </div>
+            )}
             {children}
           </div>
         </main>

@@ -21,6 +21,7 @@ import {
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { UserDetailModal } from "./UserDetailModal";
+import { responseErrorMessage } from "../components/action-feedback";
 
 interface UserRecord {
   id: string;
@@ -31,7 +32,7 @@ interface UserRecord {
   createdAt: string;
 }
 
-const ROLES = ["ALL", "ADMIN", "USER"];
+const ROLES = ["ALL", "ADMIN", "USER", "DEMO"];
 
 export default function UserManagementPage() {
   const { data: session } = useSession();
@@ -85,8 +86,7 @@ export default function UserManagementPage() {
       if (res.ok) {
         setUsers(users.filter(u => u.id !== id));
       } else {
-        const err = await res.json();
-        alert(err.error || "Lỗi khi xóa người dùng");
+        alert(await responseErrorMessage(res));
       }
     } catch (error) {
       alert("Đã xảy ra lỗi hệ thống khi xóa người dùng.");
@@ -94,6 +94,10 @@ export default function UserManagementPage() {
   };
 
   const toggleUserRole = async (user: UserRecord) => {
+    if (user.role === "DEMO") {
+      alert("Tài khoản demo được thiết lập riêng, không đổi quyền tại đây.");
+      return;
+    }
     const newRole = user.role === "ADMIN" ? "USER" : "ADMIN";
     
     if (session?.user?.id === user.id && newRole === "USER") {
@@ -115,8 +119,7 @@ export default function UserManagementPage() {
       if (res.ok) {
         setUsers(users.map(u => u.id === user.id ? { ...u, role: newRole } : u));
       } else {
-        const err = await res.json();
-        alert(err.error || "Lỗi khi cập nhật quyền");
+        alert(await responseErrorMessage(res));
       }
     } catch (error) {
       alert("Đã xảy ra lỗi hệ thống khi cập nhật quyền.");
@@ -263,6 +266,8 @@ export default function UserManagementPage() {
                     <div className="flex items-center gap-2 text-[#0c2b48]">
                       {user.role === "ADMIN" ? (
                         <Shield className="w-4 h-4 text-[#006e9b]" />
+                      ) : user.role === "DEMO" ? (
+                        <Eye className="w-4 h-4 text-amber-500" />
                       ) : (
                         <UserCheck className="w-4 h-4 text-emerald-500" />
                       )}

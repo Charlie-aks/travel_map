@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { db } from '@/db';
 import { savedLocations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -31,10 +32,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { locationId } = await req.json();
-    if (!locationId) {
-      return NextResponse.json({ error: "Location ID is required" }, { status: 400 });
+    // Tài khoản DEMO được phép lưu/bỏ lưu (chỉ ảnh hưởng danh sách riêng của tài khoản demo,
+    // không phải dữ liệu người khác nhìn thấy) — quyết định có chủ đích, xem ROADMAP 0.7.
+    const parsed = z.object({ locationId: z.string().min(1).max(100) }).safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Location ID is required", code: "INVALID_INPUT" }, { status: 400 });
     }
+    const { locationId } = parsed.data;
 
     const userId = session.user.id;
 

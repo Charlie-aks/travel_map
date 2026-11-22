@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  debug: true,
+  debug: process.env.NODE_ENV === "development",
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   adapter: DrizzleAdapter(db),
@@ -16,7 +16,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
+      // Không tự gộp tài khoản Google vào tài khoản mật khẩu cùng email: đăng ký bằng mật khẩu
+      // chưa xác minh email, nên ai đó có thể đăng ký trước bằng email của người khác.
+      // Khi trùng email, NextAuth chuyển về /login?error=OAuthAccountNotLinked.
       authorization: {
         params: {
           prompt: "select_account",

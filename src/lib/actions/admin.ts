@@ -1,63 +1,102 @@
 "use server";
 
+import { z } from "zod";
 import { db } from "@/db";
 import { locations, reviews } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth-guard";
+import { toActionError, type ActionResult } from "@/lib/action-error";
 
-export async function approveLocationAction(id: string) {
+// Mỗi hàm export trong file này là một endpoint POST công khai:
+// layout /admin KHÔNG bảo vệ chúng, nên mỗi action tự gọi requireAdmin().
+
+const idSchema = z.string().min(1).max(100);
+const EDIT_REQUEST_PREFIX = "[Yêu cầu sửa] ";
+
+export async function approveLocationAction(rawId: string): Promise<ActionResult> {
   try {
-    const loc = await db.select().from(locations).where(eq(locations.id, id));
-    if (loc && loc.length > 0) {
-      let title = loc[0].title;
-      // Remove the prefix if it exists
-      if (title.startsWith('[Yêu cầu sửa] ')) {
-        title = title.replace('[Yêu cầu sửa] ', '');
-      }
-      await db.update(locations).set({ status: 'APPROVED', title }).where(eq(locations.id, id));
-    }
+    await requireAdmin();
+    const id = idSchema.parse(rawId);
+
+    const [loc] = await db
+      .select({ title: locations.title })
+      .from(locations)
+      .where(eq(locations.id, id))
+      .limit(1);
+    if (!loc) return { error: "Location not found", code: "NOT_FOUND" };
+
+    const title = loc.title.startsWith(EDIT_REQUEST_PREFIX)
+      ? loc.title.slice(EDIT_REQUEST_PREFIX.length)
+      : loc.title;
+    await db.update(locations).set({ status: "APPROVED", title }).where(eq(locations.id, id));
+
     revalidatePath("/admin/locations");
     revalidatePath("/");
     return { success: true };
   } catch (error) {
-    console.error("Error approving location:", error);
-    return { error: "Failed to approve location" };
+    return toActionError(error, "approveLocationAction");
   }
 }
 
-export async function deleteLocationAction(id: string) {
+export async function deleteLocationAction(rawId: string): Promise<ActionResult> {
   try {
-    await db.delete(locations).where(eq(locations.id, id));
+    await requireAdmin();
+    const id = idSchema.parse(rawId);
+
+    const deleted = await db
+      .delete(locations)
+      .where(eq(locations.id, id))
+      .returning({ id: locations.id });
+    if (deleted.length === 0) return { error: "Location not found", code: "NOT_FOUND" };
+
     revalidatePath("/admin/locations");
     revalidatePath("/");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting location:", error);
-    return { error: "Failed to delete location" };
+    return toActionError(error, "deleteLocationAction");
   }
 }
 
-export async function toggleReviewStatusAction(id: string, currentStatus: string) {
+/** Đảo trạng thái PUBLISHED ⇄ HIDDEN. Trạng thái hiện tại đọc từ DB, không nhận từ client. */
+export async function toggleReviewStatusAction(rawId: string): Promise<ActionResult> {
   try {
-    const newStatus = currentStatus === 'PUBLISHED' ? 'HIDDEN' : 'PUBLISHED';
-    await db.update(reviews).set({ status: newStatus }).where(eq(reviews.id, id));
-    revalidatePath("/admin/reports");
-    revalidatePath("/"); // in case dashboard or locations use reviews
-    return { success: true };
-  } catch (error) {
-    console.error("Error toggling review status:", error);
-    return { error: "Failed to update review status" };
-  }
-}
+    await requireAdmin();
+    const id = idSchema.parse(rawId);
 
-export async function deleteReviewAction(id: string) {
-  try {
-    await db.delete(reviews).where(eq(reviews.id, id));
+    const [review] = await db
+      .select({ status: reviews.status })
+      .from(reviews)
+      .where(eq(reviews.id, id))
+      .limit(1);
+    if (!review) return { error: "Review not found", code: "NOT_FOUND" };
+
+    const nextStatus = review.status === "HIDDEN" ? "PUBLISHED" : "HIDDEN";
+    await db.update(reviews).set({ status: nextStatus }).where(eq(reviews.id, id));
+
     revalidatePath("/admin/reports");
     revalidatePath("/");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting review:", error);
-    return { error: "Failed to delete review" };
+    return toActionError(error, "toggleReviewStatusAction");
+  }
+}
+
+export async function deleteReviewAction(rawId: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const id = idSchema.parse(rawId);
+
+    const deleted = await db
+      .delete(reviews)
+      .where(eq(reviews.id, id))
+      .returning({ id: reviews.id });
+    if (deleted.length === 0) return { error: "Review not found", code: "NOT_FOUND" };
+
+    revalidatePath("/admin/reports");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    return toActionError(error, "deleteReviewAction");
   }
 }

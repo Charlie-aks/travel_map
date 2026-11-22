@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { locations, reviews } from '@/db/schema';
 import { Location } from '@/constants/mock-data';
-import { auth } from '@/auth';
+import { requireWriter } from '@/lib/auth-guard';
+import { handleRouteError } from '@/lib/route-error';
+import { createLocationSchema } from '@/lib/validations/location';
 
 import { eq, sql } from 'drizzle-orm';
 
@@ -32,11 +34,11 @@ export async function GET() {
     )
     .where(eq(locations.status, 'APPROVED'))
     .groupBy(locations.id);
-    
+
     // Map DB schema to UI expected mock-data schema to prevent breaking changes
     const mappedLocations = results.map(loc => {
       const coords = (loc.coordinates as [number, number]) || [0, 0];
-      
+
       const rating = Number(loc.avgRating).toFixed(1);
       const reviewsCountStr = Number(loc.reviewsCount) > 0 ? `${loc.reviewsCount}` : 'New';
 
@@ -44,7 +46,7 @@ export async function GET() {
         id: loc.id,
         name: loc.name,
         description: loc.description || '',
-        category: loc.category as any,
+        category: loc.category as Location['category'],
         rating: Number(rating),
         reviewsCount: reviewsCountStr,
         distance: 'Local',
@@ -62,61 +64,51 @@ export async function GET() {
 
     return NextResponse.json(mappedLocations);
   } catch (error) {
-    console.error("Failed to fetch locations:", error);
-    return NextResponse.json({ error: "Failed to fetch locations" }, { status: 500 });
+    return handleRouteError(error, "GET /api/locations");
   }
 }
 
+/** Đóng góp địa điểm mới. Luôn vào trạng thái PENDING, chờ admin duyệt. */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    const data = await req.json();
+    const user = await requireWriter();
+    const input = createLocationSchema.parse(await req.json());
 
-    // Map UI data back to DB schema
-    const newLocationData = {
-      title: data.name || 'New Location',
-      coordinates: [data.lat || 0, data.lng || 0],
-      description: data.description || '',
-      imageUrl: data.imageUrl || '',
-      category: data.category || 'All',
-      address: data.address || '',
-      bestTiming: data.bestTiming || '',
-      price: data.price || '',
-      contact: data.contact || '',
-      authorId: session?.user?.id || null,
-      status: 'PENDING',
-    };
+    const [loc] = await db.insert(locations).values({
+      title: input.name,
+      coordinates: [input.lat, input.lng],
+      description: input.description ?? '',
+      imageUrl: input.imageUrl,
+      category: input.category,
+      address: input.address ?? '',
+      bestTiming: input.bestTiming ?? '',
+      price: input.price ?? '',
+      contact: input.contact ?? '',
+      authorId: user.id,   // luôn lấy từ session, không nhận từ body
+      status: 'PENDING',   // luôn PENDING, không nhận từ body
+    }).returning();
 
-    const inserted = await db.insert(locations).values(newLocationData).returning();
-
-    if (!inserted || inserted.length === 0) {
-      throw new Error("Failed to insert");
-    }
-
-    const loc = inserted[0];
-    const coords = (loc.coordinates as [number, number]) || [0, 0];
-    
-    const responseLocation: Location = { 
+    const coords = loc.coordinates as [number, number];
+    const responseLocation: Location = {
       id: loc.id,
       name: loc.title,
       description: loc.description || '',
-      category: loc.category as any,
-      rating: data.rating || 5.0,
-      reviewsCount: data.reviewsCount || 'New',
-      distance: data.distance || 'Just added',
+      category: loc.category as Location['category'],
+      rating: 0,
+      reviewsCount: 'New',
+      distance: 'Local',
       lat: coords[0],
       lng: coords[1],
       imageUrl: loc.imageUrl,
-      address: loc.address || 'No Address',
+      address: loc.address || '',
       bestTiming: loc.bestTiming || '',
       price: loc.price || '',
       contact: loc.contact || '',
-      status: (loc.status as any) || 'PENDING',
+      status: 'PENDING',
     };
-    
+
     return NextResponse.json(responseLocation, { status: 201 });
   } catch (error) {
-    console.error("Failed to create location:", error);
-    return NextResponse.json({ error: "Failed to create location" }, { status: 500 });
+    return handleRouteError(error, "POST /api/locations");
   }
 }

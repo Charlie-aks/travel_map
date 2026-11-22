@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { requireAdminViewer } from "@/lib/auth-guard";
+import { handleRouteError } from "@/lib/route-error";
+import { publicUserColumns } from "@/lib/privacy";
 import { db } from "@/db";
 import { users, locations, reviews, savedLocations, reports } from "@/db/schema";
 import { count, desc, eq, sql } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    await requireAdminViewer();
 
     // 1. Fetch Stats
     const [totalUsers] = await db.select({ value: count() }).from(users);
@@ -22,21 +21,22 @@ export async function GET() {
     const recentReviews = await db.query.reviews.findMany({
       limit: 5,
       orderBy: [desc(reviews.createdAt)],
-      with: { author: true, location: true },
+      with: { author: { columns: publicUserColumns }, location: { columns: { id: true, title: true } } },
     });
 
     const recentLocations = await db.query.locations.findMany({
       limit: 5,
       orderBy: [desc(locations.createdAt)],
-      with: { author: true },
+      with: { author: { columns: publicUserColumns } },
     });
 
     const activities = [
       ...recentReviews.map(r => ({
         id: `review-${r.id}`,
         type: 'REVIEW',
-        userName: r.author?.name || "Người dùng",
-        userImage: r.author?.image,
+        // Dashboard (cả DEMO công khai) không tiết lộ tác giả review ẩn danh
+        userName: r.isAnonymous ? "Người dùng ẩn danh" : (r.author?.name || "Người dùng"),
+        userImage: r.isAnonymous ? null : r.author?.image,
         targetName: r.location?.title || "Địa điểm",
         time: r.createdAt,
         rating: r.rating
@@ -102,7 +102,6 @@ export async function GET() {
       trends: trends.rows
     });
   } catch (error) {
-    console.error("Failed to fetch admin overview:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return handleRouteError(error, "GET /api/admin/overview");
   }
 }

@@ -18,6 +18,7 @@ import MapPickerDynamic from "./MapPickerDynamic";
 import { Category, Location } from "@/constants/mock-data";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
+import { readApiError } from "@/i18n/apiError";
 
 export default function AddLocationForm() {
   const router = useRouter();
@@ -32,6 +33,10 @@ export default function AddLocationForm() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert('Ảnh phải nhỏ hơn 4 MB.');
+      return;
+    }
 
     setIsUploadingImage(true);
     try {
@@ -44,7 +49,8 @@ export default function AddLocationForm() {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        alert(await readApiError(response));
+        return;
       }
 
       const data = await response.json();
@@ -103,7 +109,8 @@ export default function AddLocationForm() {
       setIsSubmitted(true);
       reset(); // reset form state
     } catch (err) {
-      console.error(err);
+      // Store đã dịch thông báo theo code lỗi của API (chưa đăng nhập, tài khoản demo, dữ liệu sai...)
+      alert(err instanceof Error ? err.message : String(err));
     } finally {
       setIsSubmitting(false);
     }

@@ -1,14 +1,19 @@
 import { Metadata } from 'next';
 import { db } from '@/db';
 import { locations } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Sidebar } from "@/features/locations/Sidebar";
 import Map from "@/features/map-view/Map";
 import { LocationInitializer } from './LocationInitializer';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const locationResult = await db.select().from(locations).where(eq(locations.id, resolvedParams.id));
+  // Chỉ địa điểm đã duyệt mới có metadata (tránh lộ tiêu đề/mô tả bản chưa duyệt qua thẻ meta)
+  const locationResult = await db
+    .select({ title: locations.title, description: locations.description, imageUrl: locations.imageUrl })
+    .from(locations)
+    .where(and(eq(locations.id, resolvedParams.id), eq(locations.status, 'APPROVED')))
+    .limit(1);
   const location = locationResult[0];
 
   if (!location) {

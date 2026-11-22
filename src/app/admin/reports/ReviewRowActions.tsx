@@ -4,6 +4,7 @@ import { Trash2, EyeOff, Eye, Info } from "lucide-react";
 import { useTransition } from "react";
 import { toggleReviewStatusAction, deleteReviewAction } from "@/lib/actions/admin";
 import Link from "next/link";
+import { actionErrorMessage } from "../components/action-feedback";
 
 export function ReviewRowActions({ id, status }: { id: string, status: string | null }) {
   const [isPending, startTransition] = useTransition();
@@ -24,7 +25,8 @@ export function ReviewRowActions({ id, status }: { id: string, status: string | 
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
-            await toggleReviewStatusAction(id, status || 'PUBLISHED');
+            const result = await toggleReviewStatusAction(id);
+            if ("error" in result) alert(actionErrorMessage(result.code));
           });
         }}
         className={`p-2.5 rounded-full transition-all border border-transparent disabled:opacity-50 ${
@@ -42,7 +44,8 @@ export function ReviewRowActions({ id, status }: { id: string, status: string | 
         onClick={() => {
           if(confirm("Bạn có chắc chắn muốn xóa đánh giá này vĩnh viễn không?")) {
             startTransition(async () => {
-              await deleteReviewAction(id);
+              const result = await deleteReviewAction(id);
+              if ("error" in result) alert(actionErrorMessage(result.code));
             });
           }
         }}

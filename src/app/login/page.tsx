@@ -1,17 +1,33 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useProfileStore, Role } from '@/store/useProfileStore';
 import { useLocationStore } from '@/store/useLocationStore';
 import { signIn, getSession, useSession } from 'next-auth/react';
 
+/** Thông báo khi đăng nhập Google bị từ chối vì email đã có tài khoản mật khẩu. */
+function OAuthErrorNotice() {
+  const params = useSearchParams();
+  if (params.get('error') !== 'OAuthAccountNotLinked') return null;
+  return (
+    <p role="alert" className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm font-medium text-amber-900">
+      Email này đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng email và mật khẩu.
+    </p>
+  );
+}
+
+// Tài khoản demo cho nhà tuyển dụng (role DEMO — chỉ xem). Cấu hình qua biến môi trường;
+// nếu không đặt thì khung gợi ý không hiển thị. KHÔNG đặt thông tin của tài khoản ADMIN thật ở đây.
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL;
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+
 export default function LoginPage() {
   const router = useRouter();
   const login = useProfileStore(state => state.login);
-  const [email, setEmail] = useState('admin@gmail.com');
-  const [password, setPassword] = useState('1234');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
@@ -114,15 +130,30 @@ export default function LoginPage() {
               Continue your coastal journey.
             </p>
             
-            <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-              <p className="text-sm font-semibold text-blue-800">
-                💡 Gợi ý cho Nhà tuyển dụng (Demo):
-                <br />
-                Tài khoản: <span className="font-black">admin@gmail.com</span>
-                <br />
-                Mật khẩu: <span className="font-black">1234</span>
-              </p>
-            </div>
+            {DEMO_EMAIL && DEMO_PASSWORD ? (
+              <div className="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <p className="text-sm font-semibold text-blue-800">
+                  💡 Tài khoản demo cho Nhà tuyển dụng (chỉ xem — gồm cả trang quản trị):
+                  <br />
+                  Tài khoản: <span className="font-black">{DEMO_EMAIL}</span>
+                  <br />
+                  Mật khẩu: <span className="font-black">{DEMO_PASSWORD}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setEmail(DEMO_EMAIL); setPassword(DEMO_PASSWORD); }}
+                  className="mt-3 text-sm font-bold text-[#0077b6] hover:underline"
+                >
+                  Điền tài khoản demo
+                </button>
+              </div>
+            ) : (
+              <div className="mb-8" />
+            )}
+
+            <Suspense fallback={null}>
+              <OAuthErrorNotice />
+            </Suspense>
 
             <form className="space-y-6" onSubmit={handleLogin}>
               <div>
@@ -131,7 +162,7 @@ export default function LoginPage() {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@gmail.com" 
+                  placeholder="you@example.com"
                   className="w-full bg-[#f1f3f5] text-slate-800 px-4 py-3.5 rounded-xl border-none focus:ring-2 focus:ring-[#0077b6] outline-none transition-all placeholder:text-slate-400 font-medium"
                 />
               </div>

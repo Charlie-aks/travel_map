@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { User, Map, Bell, Shield, Settings2, KeyRound, Mail, Link2, Map as MapIcon, Globe, Moon, Trash2, Languages, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useTranslation } from "@/i18n/useTranslation";
+import { readApiError } from "@/i18n/apiError";
 import { useI18nStore } from "@/store/useI18nStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useProfileStore } from "@/store/useProfileStore";
@@ -37,7 +38,7 @@ export function SettingsForm() {
       if (res.ok) {
         updateProfile({ fullName: newName });
       } else {
-        alert("Có lỗi xảy ra khi cập nhật tên.");
+        alert(await readApiError(res));
       }
     } catch (e) {
       console.error(e);

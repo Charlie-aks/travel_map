@@ -6,6 +6,7 @@ import { Location } from "@/constants/mock-data";
 import { useLocationStore } from "@/store/useLocationStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import Link from "next/link";
+import { readApiError } from "@/i18n/apiError";
 
 interface LocationReviewsProps {
   location: Location;
@@ -81,7 +82,7 @@ export function LocationReviews({ location }: LocationReviewsProps) {
       if (res.ok) {
         alert("Báo cáo của bạn đã được ghi nhận. Quản trị viên sẽ xem xét sớm.");
       } else {
-        alert("Có lỗi xảy ra khi gửi báo cáo.");
+        alert(await readApiError(res));
       }
     } catch (e) {
       alert("Lỗi kết nối.");

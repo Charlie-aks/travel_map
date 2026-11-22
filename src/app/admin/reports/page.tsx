@@ -15,24 +15,42 @@ import { reports, reviews } from "@/db/schema";
 import { desc, inArray } from "drizzle-orm";
 import { ReviewRowActions } from "./ReviewRowActions";
 import { ReviewDetailModal } from "./ReviewDetailModal";
+import { publicUserColumns } from "@/lib/privacy";
+import { getAdminViewer } from "@/lib/auth-guard";
+import { redirect } from "next/navigation";
 
 interface PageProps {
-  searchParams: {
+  // Next 16: searchParams là Promise
+  searchParams: Promise<{
     view?: string;
-  }
+  }>
 }
 
 export default async function ReportsManagementPage({ searchParams }: PageProps) {
+  // Kiểm tra quyền NGAY TẠI page: layout không ngăn segment con render và xuất hiện
+  // trong RSC payload (xem docs Next 16, guides/authentication "Layouts and auth checks").
+  const viewer = await getAdminViewer();
+  if (!viewer) redirect("/");
+  const { view } = await searchParams;
+
   const dbReports = await db.query.reports.findMany({
     orderBy: [desc(reports.createdAt)],
-    with: { reporter: true }
+    with: { reporter: { columns: publicUserColumns } }
   });
 
   const reviewIds = dbReports.filter(r => r.targetType === 'REVIEW').map(r => r.targetId);
-  const targetReviews = reviewIds.length > 0 ? await db.query.reviews.findMany({
+  const rawReviews = reviewIds.length > 0 ? await db.query.reviews.findMany({
     where: inArray(reviews.id, reviewIds),
-    with: { location: true, author: true }
+    with: {
+      location: { columns: { id: true, title: true, imageUrl: true } },
+      author: { columns: publicUserColumns },
+    }
   }) : [];
+  // ADMIN cần biết tác giả để kiểm duyệt; tài khoản DEMO công khai thì không được thấy
+  // danh tính người đã chọn đánh giá ẩn danh.
+  const targetReviews = viewer.role === "DEMO"
+    ? rawReviews.map(r => (r.isAnonymous ? { ...r, author: null } : r))
+    : rawReviews;
 
   const displayData = dbReports.map(report => {
     if (report.targetType === 'REVIEW') {
@@ -189,7 +207,7 @@ export default async function ReportsManagementPage({ searchParams }: PageProps)
       
       {/* Detail modal for reported review context */}
       <ReviewDetailModal 
-        review={searchParams?.view ? (targetReviews.find(r => r.id === searchParams.view) as any || null) : null}
+        review={view ? (targetReviews.find(r => r.id === view) ?? null) : null}
       />
     </div>
   );

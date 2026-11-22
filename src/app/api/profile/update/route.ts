@@ -1,26 +1,25 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requireWriter } from "@/lib/auth-guard";
+import { handleRouteError } from "@/lib/route-error";
+
+const updateProfileSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+});
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // requireWriter: tài khoản DEMO dùng chung nên không được đổi tên
+    const user = await requireWriter();
+    const { name } = updateProfileSchema.parse(await req.json());
 
-    const { name } = await req.json();
-    if (!name || typeof name !== "string") {
-      return NextResponse.json({ error: "Invalid name" }, { status: 400 });
-    }
-
-    await db.update(users).set({ name }).where(eq(users.id, session.user.id));
+    await db.update(users).set({ name }).where(eq(users.id, user.id));
 
     return NextResponse.json({ success: true, name });
   } catch (error) {
-    console.error("Error updating profile:", error);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    return handleRouteError(error, "PUT /api/profile/update");
   }
 }

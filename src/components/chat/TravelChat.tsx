@@ -6,17 +6,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, X, Send, User, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useTranslation } from '@/i18n/useTranslation';
+
+const MAX_INPUT = 1000; // khớp với giới hạn ở /api/chat
 
 export default function TravelChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [localInput, setLocalInput] = useState("");
-  const { messages, sendMessage, status } = useChat();
+  const { messages, sendMessage, status, error } = useChat();
+  const { status: authStatus, data: session } = useSession();
+  const { t } = useTranslation();
+  // Role trong session chỉ dùng để hiển thị; server mới là nơi chặn thật (requireWriter ở /api/chat).
+  const isDemo = session?.user?.role === 'DEMO';
+  const isSignedIn = authStatus === 'authenticated' && !isDemo;
 
   const isLoading = status !== 'ready';
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!localInput.trim() || isLoading) return;
+    if (!isSignedIn || !localInput.trim() || isLoading) return;
     
     sendMessage({ role: 'user', parts: [{ type: 'text', text: localInput }] });
     setLocalInput('');
@@ -123,16 +133,36 @@ export default function TravelChat() {
                  </div>
               )}
               
+              {error && (
+                <p role="alert" className="text-center text-xs text-red-600 dark:text-red-400">
+                  {t.apiErrors.generic}
+                </p>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
+            {/* Input Area — chatbot yêu cầu đăng nhập (mỗi câu hỏi tốn quota Gemini) */}
+            {!isSignedIn ? (
+              <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {isDemo ? t.chat.demoDisabled : t.chat.loginRequired}
+                </p>
+                <Link
+                  href={isDemo ? "/register" : "/login"}
+                  className="shrink-0 rounded-full bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
+                >
+                  {isDemo ? t.chat.registerButton : t.chat.loginButton}
+                </Link>
+              </div>
+            ) : (
             <form onSubmit={handleFormSubmit} className="p-3 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800">
               <div className="relative flex items-center">
                 <input
                   value={localInput}
                   onChange={(e) => setLocalInput(e.target.value)}
                   placeholder="Hỏi về địa điểm, lịch trình..."
+                  maxLength={MAX_INPUT}
                   disabled={isLoading}
                   className="w-full bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2.5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
@@ -145,6 +175,7 @@ export default function TravelChat() {
                 </button>
               </div>
             </form>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

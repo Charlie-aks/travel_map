@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { eq, desc } from 'drizzle-orm';
-import { reviews } from '@/db/schema';
+import { locations, reviews } from '@/db/schema';
+import { handleRouteError } from '@/lib/route-error';
 
 export async function GET(
   req: Request,
@@ -9,13 +10,22 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params;
+
+    // Chỉ trả review của địa điểm đã duyệt (đồng bộ với GET /api/locations/[id])
+    const [loc] = await db
+      .select({ status: locations.status })
+      .from(locations)
+      .where(eq(locations.id, resolvedParams.id))
+      .limit(1);
+    if (!loc || loc.status !== 'APPROVED') return NextResponse.json([]);
+
     const locationReviews = await db.query.reviews.findMany({
       where: (reviews, { eq, and }) => and(
         eq(reviews.locationId, resolvedParams.id),
         eq(reviews.status, 'PUBLISHED')
       ),
       with: {
-        author: true
+        author: { columns: { name: true, image: true } }
       },
       orderBy: [desc(reviews.createdAt)]
     });
@@ -32,7 +42,6 @@ export async function GET(
 
     return NextResponse.json(mappedReviews);
   } catch (error) {
-    console.error("Failed to fetch location reviews:", error);
-    return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
+    return handleRouteError(error, "GET /api/locations/[id]/reviews");
   }
 }
