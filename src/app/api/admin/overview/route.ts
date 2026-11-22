@@ -34,8 +34,9 @@ export async function GET() {
       ...recentReviews.map(r => ({
         id: `review-${r.id}`,
         type: 'REVIEW',
-        userName: r.author?.name || "Người dùng",
-        userImage: r.author?.image,
+        // Dashboard (cả DEMO công khai) không tiết lộ tác giả review ẩn danh
+        userName: r.isAnonymous ? "Người dùng ẩn danh" : (r.author?.name || "Người dùng"),
+        userImage: r.isAnonymous ? null : r.author?.image,
         targetName: r.location?.title || "Địa điểm",
         time: r.createdAt,
         rating: r.rating

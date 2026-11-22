@@ -5,7 +5,9 @@ import { join } from 'path';
 import { requireWriter } from '@/lib/auth-guard';
 import { handleRouteError } from '@/lib/route-error';
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+// 4 MB: Vercel chặn body request ở ~4.5 MB, đặt thấp hơn để người dùng nhận thông báo rõ ràng.
+const MAX_BYTES = 4 * 1024 * 1024;
+const MAX_REQUEST_BYTES = MAX_BYTES + 64 * 1024; // chừa chỗ cho phần bao multipart
 
 // Chỉ nhận ảnh raster. KHÔNG nhận SVG (có thể chứa script).
 const ALLOWED_TYPES: Record<string, string> = {
@@ -39,13 +41,22 @@ export async function POST(request: Request) {
   try {
     await requireWriter();
 
+    // Từ chối sớm theo Content-Length, trước khi formData() đọc toàn bộ body vào bộ nhớ
+    const declared = Number(request.headers.get('content-length') ?? NaN);
+    if (!Number.isFinite(declared) || declared > MAX_REQUEST_BYTES) {
+      return NextResponse.json(
+        { error: 'Image must be smaller than 4 MB', code: 'INVALID_INPUT' },
+        { status: 413 },
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file');
     if (!(file instanceof File)) return badRequest('No file provided');
 
     const ext = ALLOWED_TYPES[file.type];
     if (!ext) return badRequest('Only JPEG, PNG, WebP or AVIF images are allowed');
-    if (file.size === 0 || file.size > MAX_BYTES) return badRequest('Image must be smaller than 5 MB');
+    if (file.size === 0 || file.size > MAX_BYTES) return badRequest('Image must be smaller than 4 MB');
 
     const buffer = Buffer.from(await file.arrayBuffer());
     if (!matchesSignature(buffer.subarray(0, 16), file.type)) {

@@ -10,6 +10,8 @@ export const en = {
   chat: {
     loginRequired: "Sign in to chat with the AI travel assistant.",
     loginButton: "Sign in",
+    demoDisabled: "The demo account can't use the AI assistant. Create a free account to chat.",
+    registerButton: "Sign up",
     tooLong: "Message is too long (max 1000 characters)."
   },
   navbar: {

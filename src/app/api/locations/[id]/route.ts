@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/db';
 import { locations } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Location } from '@/constants/mock-data';
 import { auth } from '@/auth';
 import { AuthError, requireAdminViewer, requireWriter } from '@/lib/auth-guard';
@@ -104,8 +104,18 @@ export async function PUT(req: Request, { params }: Ctx) {
       return NextResponse.json({ error: 'Nothing to update', code: 'INVALID_INPUT' }, { status: 400 });
     }
 
-    const [updated] = await db.update(locations).set(updateData).where(eq(locations.id, id)).returning();
-    if (!updated) return notFound();
+    // Điều kiện quyền nằm ngay trong câu UPDATE (không chỉ ở bước kiểm tra phía trên):
+    // tránh trường hợp địa điểm vừa được duyệt giữa lúc kiểm tra và lúc ghi.
+    const where = isAdmin
+      ? eq(locations.id, id)
+      : and(eq(locations.id, id), eq(locations.authorId, user.id), eq(locations.status, 'PENDING'));
+    const [updated] = await db.update(locations).set(updateData).where(where).returning();
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'You can only edit your own pending locations.', code: 'FORBIDDEN' },
+        { status: 403 },
+      );
+    }
 
     return NextResponse.json(toLocationDto(updated));
   } catch (error) {

@@ -16,9 +16,11 @@ export default function TravelChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [localInput, setLocalInput] = useState("");
   const { messages, sendMessage, status, error } = useChat();
-  const { status: authStatus } = useSession();
+  const { status: authStatus, data: session } = useSession();
   const { t } = useTranslation();
-  const isSignedIn = authStatus === 'authenticated';
+  // Role trong session chỉ dùng để hiển thị; server mới là nơi chặn thật (requireWriter ở /api/chat).
+  const isDemo = session?.user?.role === 'DEMO';
+  const isSignedIn = authStatus === 'authenticated' && !isDemo;
 
   const isLoading = status !== 'ready';
 
@@ -143,12 +145,14 @@ export default function TravelChat() {
             {/* Input Area — chatbot yêu cầu đăng nhập (mỗi câu hỏi tốn quota Gemini) */}
             {!isSignedIn ? (
               <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3">
-                <p className="text-sm text-gray-600 dark:text-gray-300">{t.chat.loginRequired}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  {isDemo ? t.chat.demoDisabled : t.chat.loginRequired}
+                </p>
                 <Link
-                  href="/login"
+                  href={isDemo ? "/register" : "/login"}
                   className="shrink-0 rounded-full bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
                 >
-                  {t.chat.loginButton}
+                  {isDemo ? t.chat.registerButton : t.chat.loginButton}
                 </Link>
               </div>
             ) : (

@@ -4,46 +4,62 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { locations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { requireUser } from '@/lib/auth-guard';
+import { requireWriter } from '@/lib/auth-guard';
 import { handleRouteError } from '@/lib/route-error';
 
 export const maxDuration = 30; // Vercel max duration limit if applicable
 
-const MAX_MESSAGES = 30;          // độ dài hội thoại tối đa gửi lên model
-const MAX_USER_TEXT = 1000;       // ký tự mỗi tin nhắn của người dùng
-const MAX_ASSISTANT_TEXT = 8000;  // tin trả lời cũ của model được gửi lại làm ngữ cảnh
+const MAX_BODY_BYTES = 200_000;    // chặn sớm body quá lớn
+const HISTORY_WINDOW = 12;         // chỉ gửi N tin gần nhất lên model (không từ chối hội thoại dài)
+const MAX_USER_TEXT = 1000;        // ký tự mỗi tin nhắn người dùng (khớp maxLength ở client)
+const MAX_ASSISTANT_TEXT = 3000;   // tin trả lời cũ của model gửi lại làm ngữ cảnh — cắt bớt nếu dài
+const MAX_OUTPUT_TOKENS = 800;
 
-const textPart = z.object({ type: z.literal('text'), text: z.string() });
-
-// Chỉ nhận role user/assistant: client không được tự chèn system prompt.
-const messageSchema = z.looseObject({
+// Nhận shape lỏng để không vỡ khi AI SDK thêm part phụ (vd. "step-start"), nhưng khi dựng lại
+// message CHỈ giữ part text. Part file/reasoning/tool… bị bỏ: chúng cho phép đẩy URL/PDF/video
+// hoặc nội dung rất lớn lên Gemini mà không bị đếm vào giới hạn.
+const incomingMessage = z.object({
   id: z.string().max(100),
-  role: z.enum(['user', 'assistant']),
-  parts: z.array(z.looseObject({ type: z.string() })).max(50),
+  role: z.enum(['user', 'assistant']), // không nhận 'system' từ client
+  parts: z.array(z.looseObject({ type: z.string(), text: z.unknown().optional() })).max(50),
 });
+const bodySchema = z.object({ messages: z.array(incomingMessage).min(1).max(200) });
 
-const bodySchema = z.object({
-  messages: z.array(messageSchema).min(1).max(MAX_MESSAGES),
-});
-
-function totalText(parts: { type: string }[]): number {
-  return parts.reduce((sum, p) => {
-    const parsed = textPart.safeParse(p);
-    return sum + (parsed.success ? parsed.data.text.length : 0);
-  }, 0);
+function textOf(parts: { type: string; text?: unknown }[]): string {
+  return parts
+    .filter((p) => p.type === 'text' && typeof p.text === 'string')
+    .map((p) => p.text as string)
+    .join('');
 }
 
 export async function POST(req: Request) {
   try {
-    // Chatbot gọi Gemini — mỗi request tốn quota, nên bắt buộc đăng nhập (tài khoản DEMO vẫn dùng được).
-    await requireUser();
+    // Mỗi request tốn quota Gemini → bắt buộc đăng nhập, và chặn tài khoản DEMO
+    // (mật khẩu DEMO công khai, chưa có rate limit — xem ROADMAP giai đoạn 1).
+    await requireWriter();
 
-    const { messages } = bodySchema.parse(await req.json());
-    for (const m of messages) {
-      const limit = m.role === 'user' ? MAX_USER_TEXT : MAX_ASSISTANT_TEXT;
-      if (totalText(m.parts) > limit) {
+    if (Number(req.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
+      return Response.json({ error: 'Request too large', code: 'INVALID_INPUT' }, { status: 413 });
+    }
+
+    const { messages: incoming } = bodySchema.parse(await req.json());
+    const recent = incoming.slice(-HISTORY_WINDOW);
+
+    const last = recent[recent.length - 1];
+    if (last.role !== 'user') {
+      return Response.json({ error: 'Last message must be from user', code: 'INVALID_INPUT' }, { status: 400 });
+    }
+
+    // Dựng lại message từ dữ liệu đã kiểm tra — không chuyển tiếp object gốc của client
+    const messages: UIMessage[] = [];
+    for (const m of recent) {
+      let text = textOf(m.parts).trim();
+      if (m.role === 'user' && text.length > MAX_USER_TEXT) {
         return Response.json({ error: 'Message too long', code: 'INVALID_INPUT' }, { status: 400 });
       }
+      if (m.role === 'assistant') text = text.slice(0, MAX_ASSISTANT_TEXT);
+      if (!text) continue;
+      messages.push({ id: m.id, role: m.role, parts: [{ type: 'text', text }] });
     }
 
     // Lấy thông tin các địa điểm đã được duyệt để cung cấp làm bối cảnh (context/RAG) cho AI
@@ -78,7 +94,8 @@ Nguyên tắc:
     const result = streamText({
       model: google('gemini-2.5-flash'),
       system: systemPrompt,
-      messages: await convertToModelMessages(messages as unknown as UIMessage[]),
+      messages: await convertToModelMessages(messages),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
     });
 
     return result.toUIMessageStreamResponse();

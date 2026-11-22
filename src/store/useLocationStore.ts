@@ -161,6 +161,8 @@ export const useLocationStore = create<LocationState>()(
           if (!res.ok) {
             throw new Error(await readApiError(res));
           }
+          // updated = true khi người dùng viết lại review cũ (mỗi người một review/địa điểm)
+          const { updated } = (await res.json()) as { updated?: boolean };
 
           // Force re-fetch locations to get updated ratings and reviews
           const { fetchLocations } = get();
@@ -176,8 +178,11 @@ export const useLocationStore = create<LocationState>()(
           // Refresh stats from DB
           const profileState = useProfileStore.getState();
           await profileState.fetchStats();
-          profileState.incrementBadgeProgress('explorer', 1);
-          profileState.addXp(20);
+          if (!updated) {
+            // Chỉ cộng thưởng cho review mới, không cho lần sửa lại
+            profileState.incrementBadgeProgress('explorer', 1);
+            profileState.addXp(20);
+          }
         } catch (error: any) {
           set({ error: error.message, isLoading: false });
           alert(error.message);

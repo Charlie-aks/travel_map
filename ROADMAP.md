@@ -85,6 +85,21 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [x] Cập nhật `AGENTS.md` và skill `api-route`/`server-action`/`db-change` theo helper mới
 - [x] Thêm `.env.example` (và bỏ chặn nó trong `.gitignore`)
 
+### 0.7 Sửa theo security review (agent `security-reviewer`, 2026-11-22)
+Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
+- [x] **HIGH** — Chat: chỉ giữ part `text` khi dựng lại message (bỏ part file/reasoning/tool, vốn cho phép đẩy URL PDF/video hoặc nội dung lớn lên Gemini), chặn body > 200 KB, `maxOutputTokens: 800`, chỉ gửi 12 tin gần nhất (hết lỗi chat bị kẹt sau khoảng 15 lượt), tin cuối phải là của user
+- [x] **HIGH** — `/admin/reports` tự kiểm tra quyền ngay trong page (layout không ngăn segment con xuất hiện trong RSC payload). Đã kiểm bằng request RSC tự dựng: 307, không có dữ liệu
+- [x] **Quyết định:** tắt chatbot với tài khoản DEMO cho tới khi có rate limit; UI mời DEMO đăng ký tài khoản
+- [x] MEDIUM — DEMO không còn thấy tác giả review ẩn danh (trang reports); dashboard luôn ẩn tác giả review ẩn danh
+- [x] MEDIUM — **Quyết định:** mỗi người một review cho mỗi địa điểm, viết lại thì cập nhật (giữ nguyên status nếu đã bị admin ẩn; không cộng XP lần nữa). Ràng buộc unique trong DB để ở giai đoạn 1
+- [x] MEDIUM — Upload: giới hạn 4 MB (dưới mức 4.5 MB Vercel chặn), từ chối sớm theo `Content-Length` trước khi đọc body; client kiểm kích thước trước khi gửi
+- [x] LOW — Sửa địa điểm: điều kiện quyền (chủ sở hữu + PENDING) nằm ngay trong câu UPDATE (hết race condition)
+- [x] LOW — `maskEmail` che cả tên miền (`***@***.vn`)
+- [x] LOW — `/api/locations/saved` validate `locationId`. **Quyết định:** DEMO vẫn được lưu/bỏ lưu (chỉ ảnh hưởng danh sách của chính tài khoản demo)
+- [x] Review của địa điểm chưa duyệt không còn trả qua `/api/locations/[id]/reviews`
+- [x] Lỗi chức năng: modal chi tiết review ở trang reports không mở được (`searchParams` chưa `await`)
+- [ ] Để giai đoạn sau: rate limit (chat, upload, review, đăng nhập/đăng ký); xác minh email; duyệt địa điểm theo đúng phiên bản admin đã xem (chống đổi nội dung lúc duyệt); luồng "yêu cầu sửa" tạo bản trùng và tiền tố có thể vượt 200 ký tự; chặn hai admin hạ quyền lẫn nhau dẫn tới không còn admin nào; `trustHost` khi self-host
+
 ---
 
 ## Giai đoạn 1 — Nền móng
@@ -96,7 +111,10 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [ ] Sửa hết lỗi ESLint (68 lỗi, 93 cảnh báo lúc bắt đầu)
 - [ ] Thiết lập test (Vitest) + test cho API quan trọng (phân quyền 401/403)
 - [ ] Phân trang cho danh sách admin (users, locations, reports)
-- [ ] Rate limit cho chat/upload (cần chọn dịch vụ, vd. Upstash) ⚠️
+- [ ] Rate limit cho chat/upload/review/đăng nhập/đăng ký (cần chọn dịch vụ, vd. Upstash) ⚠️ — sau đó cân nhắc mở lại chat cho DEMO với bucket riêng
+- [ ] Unique index `review(locationId, authorId)` (cần gộp review trùng có sẵn trước)
+- [ ] Duyệt địa điểm kèm phiên bản nội dung admin đã xem (cột `updatedAt`)
+- [ ] Sửa luồng "yêu cầu sửa địa điểm" (hiện tạo bản ghi mới có tiền tố, duyệt xong thành bản trùng)
 - [ ] Chuẩn hoá email (chữ thường) khi đăng ký và đăng nhập — cần xử lý dữ liệu cũ có chữ hoa
 - [ ] README: thay hướng dẫn `drizzle-kit push` bằng `migrate` sau khi có baseline
 - [ ] Test chạy thử với tài khoản DEMO thật: vào admin, thử duyệt/xoá → bị chặn, email bị che
@@ -131,6 +149,8 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Chạy agent `security-reviewer` trên toàn nhánh: 2 HIGH, 3 MEDIUM, 4 LOW. Xong 0.7, sửa toàn bộ HIGH/MEDIUM và phần lớn LOW (chi tiết ở 0.7). Kiểm tra: tsc 0 lỗi · security-scan sạch toàn `src/` · build OK · smoke test: chat/upload/saved trả 401 khi chưa đăng nhập, request RSC vào `/admin/reports` trả 307 không có dữ liệu.
 
 - **2026-11-22** — Xong 0.6: dọn script tạm và file log, gộp kế hoạch cũ vào roadmap, cập nhật AGENTS.md + skill. **Giai đoạn 0 hoàn tất phần code.** Tổng kết: security-scan 22 HIGH → 0 · npm audit production 34 → 0 · tsc 0 lỗi · build OK. Việc còn lại: bạn chạy `scripts/setup-accounts.ts` và đặt biến môi trường demo trên Vercel (mục 0.4), sau đó review và merge nhánh.
 

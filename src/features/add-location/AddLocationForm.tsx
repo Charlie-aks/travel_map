@@ -33,6 +33,10 @@ export default function AddLocationForm() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert('Ảnh phải nhỏ hơn 4 MB.');
+      return;
+    }
 
     setIsUploadingImage(true);
     try {

@@ -10,6 +10,8 @@ export const vi = {
   chat: {
     loginRequired: "Đăng nhập để trò chuyện với trợ lý du lịch AI.",
     loginButton: "Đăng nhập",
+    demoDisabled: "Tài khoản demo không dùng được trợ lý AI. Hãy tạo tài khoản miễn phí để trò chuyện.",
+    registerButton: "Đăng ký",
     tooLong: "Tin nhắn quá dài (tối đa 1000 ký tự)."
   },
   navbar: {
