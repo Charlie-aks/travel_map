@@ -101,6 +101,11 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 - [x] Lỗi chức năng: modal chi tiết review ở trang reports không mở được (`searchParams` chưa `await`)
 - [ ] Để giai đoạn sau: rate limit (chat, upload, review, đăng nhập/đăng ký); xác minh email; duyệt địa điểm theo đúng phiên bản admin đã xem (chống đổi nội dung lúc duyệt); luồng "yêu cầu sửa" tạo bản trùng và tiền tố có thể vượt 200 ký tự; chặn hai admin hạ quyền lẫn nhau dẫn tới không còn admin nào; `trustHost` khi self-host
 
+### 0.8 CI (GitHub Actions)
+- [x] `.github/workflows/ci.yml` chạy trên mọi PR và mỗi lần push lên `main`. Job `check` (bắt buộc): `npm ci` → `tsc` → `security-scan.mjs` → `npm audit --omit=dev --audit-level=high` → `next build`. Không cần secret: đã thử build trên bản checkout sạch, không có `.env*`, thành công
+- [x] Job `lint` chạy ESLint toàn repo nhưng **chưa chặn merge** (`continue-on-error`, còn 55 lỗi cũ). Lỗi vẫn hiện thành chú thích trên PR
+- [ ] ⚠️ Sau khi CI chạy xanh lần đầu: vào GitHub → Settings → Branches, bật "Require status checks to pass" cho `main` và chọn job **Type-check · security · build**
+
 ---
 
 ## Giai đoạn 1 — Nền móng
@@ -109,7 +114,8 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 - [ ] Type `Location`/`Review` suy ra từ schema Drizzle, thay cho `src/constants/mock-data.ts`; gom hàm map DB → DTO
 - [ ] Baseline migration (DB hiện tạo bằng `push`) — theo skill `db-change`
 - [ ] Enum cho `status`/`role`/`category`/`targetType`; index cho foreign key; `onDelete` hợp lý
-- [ ] Sửa hết lỗi ESLint (68 lỗi, 93 cảnh báo lúc bắt đầu)
+- [ ] Sửa hết lỗi ESLint (68 lỗi, 93 cảnh báo lúc bắt đầu; 55 lỗi lúc thêm CI), rồi bỏ `continue-on-error` ở job `lint` trong CI
+- [ ] Thêm bước chạy test vào CI khi đã có Vitest
 - [ ] Thiết lập test (Vitest) + test cho API quan trọng (phân quyền 401/403)
 - [ ] Phân trang cho danh sách admin (users, locations, reports)
 - [ ] Rate limit cho chat/upload/review/đăng nhập/đăng ký (cần chọn dịch vụ, vd. Upstash) ⚠️ — sau đó cân nhắc mở lại chat cho DEMO với bucket riêng
@@ -150,6 +156,8 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong 0.8: thêm CI GitHub Actions (tsc, security-scan, npm audit production, build; ESLint chạy nhưng chưa chặn merge). Đã chạy thử các bước trên bản checkout sạch, không có biến môi trường: tsc 0 lỗi · scan sạch · audit 0 · build OK. `npm ci` chưa thử được ở local (mạng sandbox bị chặn), để lần chạy đầu trên GitHub kiểm chứng.
 
 - **2026-11-22** — Xác nhận local và production dùng chung DB Neon. Đã chuyển `admin@gmail.com` sang DEMO trên DB production (2 ADMIN → 1 ADMIN riêng của chủ project + 1 DEMO). Test đầu-cuối với tài khoản DEMO thật trên build local: đọc OK, email bị che, 9/9 thao tác ghi bị chặn. Còn lại: merge, deploy, đặt biến demo, đổi `AUTH_SECRET`.
 

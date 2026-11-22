@@ -1,0 +1,78 @@
+# CI — chạy trên mọi Pull Request và mỗi lần push lên main.
+# Job `check` là bắt buộc (nên bật "Require status checks" cho nhánh main).
+# Không cần secret: build không truy vấn DB (trang admin/địa điểm render động).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Push commit mới lên cùng PR thì huỷ lần chạy cũ.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  check:
+    name: Type-check · security · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cài dependency
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript
+        run: npx tsc --noEmit -p .
+
+      - name: Quét bảo mật tĩnh (security-scan.mjs)
+        run: node .claude/skills/verify/scripts/security-scan.mjs
+
+      - name: npm audit (dependency production, mức high trở lên)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Cache build Next.js
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - name: Build production
+        run: npm run build
+
+  lint:
+    name: ESLint (chưa chặn merge)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cài dependency
+        run: npm ci --no-audit --no-fund
+
+      # Repo còn lỗi lint cũ (55 lỗi lúc thêm CI). Lỗi vẫn hiện thành chú thích trên PR
+      # nhưng không làm CI đỏ. Bỏ `continue-on-error` khi xong mục ESLint ở giai đoạn 1.
+      - name: ESLint
+        continue-on-error: true
+        run: npx eslint .

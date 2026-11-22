@@ -23,7 +23,7 @@ node .claude/skills/verify/scripts/security-scan.mjs [files]   # quét bảo m�
 npx drizzle-kit generate --name <x>   # sinh migration (không chạm DB)
 ```
 
-Chưa có test framework. Biến môi trường trong `.env.local` (không commit, không in giá trị ra output).
+Chưa có test framework. CI (`.github/workflows/ci.yml`) chạy tsc + security-scan + npm audit + build trên mọi PR. ESLint đã có trong CI nhưng chưa chặn merge. Biến môi trường trong `.env.local` (không commit, không in giá trị ra output).
 
 ## Cấu trúc
 
