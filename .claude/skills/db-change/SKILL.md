@@ -91,6 +91,6 @@ export const reviews = pgTable(
 
 ## Script một lần
 
-Các file ở gốc repo như `delete-users.ts` (xoá **toàn bộ** user), `tmp-users.ts`, `check-db.js`, `test_db.ts` là script tạm, kết nối thẳng DB trong `.env.local`. Không chạy chúng. Script mới (seed, backfill) đặt trong `scripts/`, có tên mô tả rõ, in ra DB đích (host, không in mật khẩu) và yêu cầu xác nhận trước khi ghi.
+Script mới (seed, backfill) đặt trong `scripts/`, có tên mô tả rõ, in ra DB đích (host, không in mật khẩu), mặc định chạy thử và chỉ ghi khi có `--yes`. Mẫu: `scripts/setup-accounts.ts`. Chạy bằng `npx tsx scripts/<file>.ts` — chỉ sau khi người dùng đồng ý.
 
 Thiết kế bảng/quan hệ phức tạp hoặc cần tối ưu truy vấn: nhờ agent `db-architect`.

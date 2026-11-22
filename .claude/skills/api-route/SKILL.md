@@ -17,7 +17,16 @@ Trước khi dùng API Next.js mà bạn không chắc, đọc tài liệu đún
 
 ## Helper dùng chung
 
-Hai file dưới đây là nền tảng cho mọi route và server action. Nếu chưa tồn tại trong repo, tạo chúng trước (đúng nội dung này, chỉnh nếu cần) rồi mới viết route.
+**Đã có trong repo** — dùng, đừng viết lại:
+- `src/lib/auth-guard.ts`: `requireUser()` (đăng nhập; thao tác cá nhân, chat), `requireWriter()` (ghi dữ liệu dùng chung — chặn role `DEMO`), `requireAdmin()` (ghi trong khu vực admin), `requireAdminViewer()` (xem admin — ADMIN hoặc DEMO), `getAdminViewer()` (trả null, dùng trong layout). Role đọc từ DB. Lỗi là `AuthError` có `status` + `code` (`UNAUTHORIZED`/`FORBIDDEN`/`DEMO_READ_ONLY`).
+- `src/lib/route-error.ts`: `handleRouteError(error, context)` → JSON `{ error, code }`.
+- `src/lib/privacy.ts`: `publicUserColumns`, `maskEmail()` (che email khi người xem là DEMO).
+- `src/lib/validations/location.ts`: schema địa điểm dùng chung.
+- Client: `src/i18n/apiError.ts` (`readApiError(res)`) dịch lỗi theo `code`.
+
+Chọn guard: ghi dữ liệu người khác nhìn thấy (địa điểm, review, report, upload, đổi tên) → `requireWriter`; dữ liệu riêng của người dùng (lưu địa điểm) hoặc chỉ đọc tốn tài nguyên (chat) → `requireUser`.
+
+Bản rút gọn ban đầu của hai helper (để hiểu nguyên lý — bản thật trong repo đầy đủ hơn):
 
 ### `src/lib/auth-guard.ts`
 

@@ -40,7 +40,9 @@ Chưa có test framework. Biến môi trường trong `.env.local` (không commi
 - Không trả cột `password` của bảng `user` — luôn chỉ định `columns` khi nạp user/relation `author`.
 - Không trả `error.message`/stack ra client.
 - Mọi chuỗi giao diện qua i18n, thêm vào cả `vi.ts` và `en.ts`. Màu tự đặt có biến thể `dark:`.
-- Thay đổi DB qua migration (`drizzle-kit generate` → đọc SQL → người dùng đồng ý → `migrate`). Không `push` lên DB có dữ liệu thật. Không chạy các script ở gốc repo (`delete-users.ts`, `tmp-users.ts`, `check-db.js`, `test_db.ts`).
+- Thay đổi DB qua migration (`drizzle-kit generate` → đọc SQL → người dùng đồng ý → `migrate`). Không `push` lên DB có dữ liệu thật. Script ghi DB đặt trong `scripts/`, mặc định chạy thử và cần `--yes` mới ghi (mẫu: `scripts/setup-accounts.ts`); chỉ chạy khi người dùng đồng ý.
+- Phân quyền: role `USER` / `ADMIN` / `DEMO` (tài khoản demo công khai, chỉ xem). Dùng `requireUser` (thao tác cá nhân, chat), `requireWriter` (ghi dữ liệu dùng chung — chặn DEMO), `requireAdmin` (ghi trong admin), `requireAdminViewer` (xem admin — ADMIN + DEMO). DEMO xem dữ liệu người dùng thì che email (`maskEmail`).
+- Lỗi API trả `{ error, code }`; client dịch theo `code` qua `src/i18n/apiError.ts` (trang admin: `src/app/admin/components/action-feedback.ts`).
 
 ## Kế hoạch & tiến độ
 
@@ -60,6 +62,6 @@ Agent (`.claude/agents/`):
 - `ui-feature-builder` — xây UI theo quy ước Coastal Modern / i18n / dark mode.
 - `db-architect` — thiết kế schema, index, tối ưu truy vấn; sinh migration nhưng không chạm DB.
 
-## Vấn đề đã biết (tính đến 2026-11)
+## Vấn đề đã biết
 
-Lỗ hổng chưa sửa: server action admin thiếu kiểm tra quyền; tài khoản admin mặc định bị công khai (README + trang login); `/api/upload` và `/api/chat` không yêu cầu đăng nhập; `POST /api/locations` cho khách vô danh; một số route trả password hash qua relation `author`; review không giới hạn rating; NextAuth `debug: true`; `next`/`@auth/core` có CVE critical (cần nâng cấp). Nợ kỹ thuật: XP/badge chỉ ở localStorage; collections còn mock; chưa có migration/index/enum; chưa có test. Chạy `security-scan.mjs` để xem danh sách hiện tại.
+Giai đoạn 0 (bảo mật) đã vá các lỗ hổng đã biết — xem `ROADMAP.md`. Nợ kỹ thuật còn lại: XP/badge chỉ ở localStorage; collections còn mock; rating mặc định giả; chưa có migration/index/enum (DB tạo bằng `push`); chưa có test; chưa có rate limit cho chat/upload. Chạy `security-scan.mjs` để kiểm tra lại sau mỗi thay đổi.

@@ -70,7 +70,7 @@ export async function toggleReviewStatusAction(rawId: string): Promise<ActionRes
 }
 ```
 
-Nếu nhiều file action cùng cần `toActionError`, chuyển nó sang `src/lib/action-error.ts` (file thường, **không** có `"use server"` — mọi hàm export trong file `"use server"` đều thành endpoint, kể cả helper).
+**Trong repo đã có** `toActionError` và type `ActionResult` ở `src/lib/action-error.ts` (file thường, **không** có `"use server"` — mọi hàm export trong file `"use server"` đều thành endpoint, kể cả helper). Import từ đó thay vì định nghĩa lại như mẫu trên. Xem `src/lib/actions/admin.ts` làm ví dụ thật. Tài khoản `DEMO` bị `requireAdmin()`/`requireWriter()` từ chối với `code: "DEMO_READ_ONLY"` — UI admin hiển thị qua `actionErrorMessage(result.code)`.
 
 ## Gọi từ client component
 

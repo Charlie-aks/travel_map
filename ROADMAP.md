@@ -2,7 +2,7 @@
 
 Kế hoạch và tiến độ nâng cấp project sau thời gian tạm dừng. File này là nguồn sự thật về **đang làm gì, đã xong gì, đã quyết định gì** — cập nhật sau mỗi nhóm việc.
 
-**Cập nhật lần cuối:** 2026-11-22 · **Giai đoạn hiện tại:** 0 — Bảo mật · **Nhánh:** `upgrade/phase-0-security`
+**Cập nhật lần cuối:** 2026-11-22 · **Giai đoạn hiện tại:** 0 — Bảo mật (code xong, chờ bạn thiết lập tài khoản trên DB) · **Nhánh:** `upgrade/phase-0-security`
 
 Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa làm · ⚠️ cần bạn thao tác hoặc quyết định
 
@@ -12,7 +12,7 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 
 | Giai đoạn | Mục tiêu | Trạng thái |
 |---|---|---|
-| 0. Bảo mật | Vá lỗ hổng có thể khai thác, nâng cấp bản vá CVE, dọn repo | 🟡 Đang làm |
+| 0. Bảo mật | Vá lỗ hổng có thể khai thác, nâng cấp bản vá CVE, dọn repo | 🟢 Code xong · ⚠️ chờ thiết lập tài khoản (0.4) |
 | 1. Nền móng | Validate thống nhất, type từ schema, migration + index + enum, lint sạch, test | ⚪ Chưa bắt đầu |
 | 2. Bỏ dữ liệu giả | Gamification, collections, rating, khoảng cách dùng dữ liệu thật | ⚪ Chưa bắt đầu |
 | 3. Tính năng mới | Chỉ đường, lịch trình thông minh, gợi ý, chatbot có tool | ⚪ Chưa bắt đầu |
@@ -79,8 +79,10 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [x] `npm run build` thành công; chạy thử server production: mọi API ghi/admin trả 401 khi chưa đăng nhập, register trả 400 khi dữ liệu sai, `/admin` redirect về `/`
 
 ### 0.6 Dọn repo
-- [ ] Xoá script tạm: `delete-users.ts`, `tmp-users.ts`, `check-db.js`, `test_db.ts`, `tsc.log`, `tsc_output.txt`, file upload thử trong `public/uploads/`
-- [ ] Gộp `implementation_plan.md.resolved` vào file này rồi xoá
+- [x] Xoá script tạm: `delete-users.ts`, `tmp-users.ts`, `check-db.js`, `test_db.ts`, `tsc.log`, `tsc_output.txt` (còn trong lịch sử git)
+- [x] Giữ `public/uploads/1778250396986-Baidaongdia.avif` vì có thể đang được địa điểm trong DB tham chiếu; thêm `/public/uploads/` vào `.gitignore` để ảnh upload local không bị commit nữa
+- [x] Gộp `implementation_plan.md.resolved` vào file này (giai đoạn 2–4) rồi xoá
+- [x] Cập nhật `AGENTS.md` và skill `api-route`/`server-action`/`db-change` theo helper mới
 - [x] Thêm `.env.example` (và bỏ chặn nó trong `.gitignore`)
 
 ---
@@ -95,6 +97,9 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [ ] Thiết lập test (Vitest) + test cho API quan trọng (phân quyền 401/403)
 - [ ] Phân trang cho danh sách admin (users, locations, reports)
 - [ ] Rate limit cho chat/upload (cần chọn dịch vụ, vd. Upstash) ⚠️
+- [ ] Chuẩn hoá email (chữ thường) khi đăng ký và đăng nhập — cần xử lý dữ liệu cũ có chữ hoa
+- [ ] README: thay hướng dẫn `drizzle-kit push` bằng `migrate` sau khi có baseline
+- [ ] Test chạy thử với tài khoản DEMO thật: vào admin, thử duyệt/xoá → bị chặn, email bị che
 
 ## Giai đoạn 2 — Bỏ dữ liệu giả
 
@@ -126,6 +131,8 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong 0.6: dọn script tạm và file log, gộp kế hoạch cũ vào roadmap, cập nhật AGENTS.md + skill. **Giai đoạn 0 hoàn tất phần code.** Tổng kết: security-scan 22 HIGH → 0 · npm audit production 34 → 0 · tsc 0 lỗi · build OK. Việc còn lại: bạn chạy `scripts/setup-accounts.ts` và đặt biến môi trường demo trên Vercel (mục 0.4), sau đó review và merge nhánh.
 
 - **2026-11-22** — Xong 0.5: nâng Next 16.4.6, next-auth beta.32 và các bản vá; npm audit production 0 lỗ hổng; build thành công; smoke test bằng curl trên server production xác nhận chặn quyền (11 endpoint → 401, validate register → 400).
 
