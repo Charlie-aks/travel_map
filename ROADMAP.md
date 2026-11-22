@@ -28,7 +28,7 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 | 2026-11-22 | Chatbot AI **bắt buộc đăng nhập**, có giới hạn độ dài và số tin nhắn. | Mỗi request tốn quota Gemini. |
 | 2026-11-22 | **Tắt** `allowDangerousEmailAccountLinking` (tự gộp tài khoản Google theo email). | Đăng ký không xác minh email nên có thể bị chiếm tài khoản trước. |
 | 2026-11-22 | Làm trên nhánh riêng, **commit sau mỗi nhóm việc**, cập nhật file này cùng commit. | Dễ review và hoàn tác. |
-| 2026-11-22 | CI dùng **Node 22 + npm 11.1.0**, cùng phiên bản với máy dev. Nâng npm ở máy thì sửa `ci.yml` theo. | npm 10 và npm 11 đọc lockfile khác nhau, nên `npm ci` sẽ hỏng nếu hai bên lệch. |
+| 2026-11-22 | `.npmrc` của project đặt **`legacy-peer-deps=false`**: lockfile luôn được tạo với peer dependency bật. CI dùng Node 22 + npm 11.1.0, cùng phiên bản với máy dev. | `~/.npmrc` ở máy dev bật `legacy-peer-deps` và tạo ra lockfile mà `npm ci` trên CI từ chối. |
 
 ---
 
@@ -158,7 +158,7 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
 
-- **2026-11-22** — CI lần đầu đỏ ở `npm ci` (PR #1): runner Node 22 dùng npm 10.9, lockfile tạo bằng npm 11.1 → npm 10 báo lệch peer tùy chọn `fdir → picomatch`. Sửa: CI cài npm 11.1.0 trước `npm ci`, vẫn giữ Node 22 như máy dev. **Quyết định:** phiên bản npm trên CI phải trùng máy dev; nâng npm ở máy thì sửa luôn `ci.yml`.
+- **2026-11-22** — Sửa CI đỏ ở `npm ci` (PR #1, 2 lần chạy). **Nguyên nhân thật:** `~/.npmrc` ở máy dev đặt `legacy-peer-deps=true`, nên lockfile được tạo mà bỏ qua peer dependency. Kết quả là `fdir` ở gốc thấy picomatch 2.3.2 trong khi khai báo peer `^3 || ^4`, và `npm ci` mặc định trên CI từ chối. Lockfile trên `main` cũng có lỗi này. Lần sửa trước (cài npm 11.1.0 trên CI) **không phải** cách sửa đúng; bước đó vẫn giữ để CI dùng cùng bản npm với máy dev. Cách sửa: tạo lại lockfile với `legacy-peer-deps=false` (picomatch 4.0.7 lên gốc, micromatch nhận bản 2.3.2 lồng riêng, không gói nào khác đổi phiên bản), thêm `.npmrc` của project để giữ cấu hình này. Đã kiểm chứng ở máy: tái hiện đúng lỗi của CI trên lockfile cũ; với lockfile mới, `npm ci` thật (có mạng, bản sao sạch) → tsc → security-scan → build đều qua.
 
 - **2026-11-22** — Xong 0.8: thêm CI GitHub Actions (tsc, security-scan, npm audit production, build; ESLint chạy nhưng chưa chặn merge). Đã chạy thử các bước trên bản checkout sạch, không có biến môi trường: tsc 0 lỗi · scan sạch · audit 0 · build OK. `npm ci` chưa thử được ở local (mạng sandbox bị chặn), để lần chạy đầu trên GitHub kiểm chứng.
 
