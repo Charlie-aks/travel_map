@@ -11,7 +11,8 @@ export interface Badge {
   icon?: string;
 }
 
-export type Role = 'USER' | 'ADMIN';
+// Chỉ dùng để hiển thị — quyền thật luôn do server kiểm tra (role đọc từ DB).
+export type Role = 'USER' | 'ADMIN' | 'DEMO';
 
 
 

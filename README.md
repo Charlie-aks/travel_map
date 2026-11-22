@@ -65,10 +65,7 @@ graph TD
    ```bash
    npm install
    ```
-3. Thiết lập biến môi trường (`.env.local`):
-   ```env
-   DATABASE_URL="postgresql://user:password@host:port/db"
-   ```
+3. Thiết lập biến môi trường: sao chép `.env.example` thành `.env.local` rồi điền giá trị (tối thiểu `DATABASE_URL` và `AUTH_SECRET`).
 4. Chạy migration cơ sở dữ liệu:
    ```bash
    npx drizzle-kit push
@@ -88,14 +85,24 @@ Mở [http://localhost:3000](http://localhost:3000) và nhấn `CMD/CTRL + K` đ
 4. **Quản lý bộ sưu tập**: Lưu lại các địa điểm yêu thích vào bộ sưu tập cá nhân của bạn.
 5. **Xem thành tích**: Tham gia đóng góp để nhận được các danh hiệu và thành tích trong hệ thống.
 
-## 🔑 Tài khoản Admin
+## 🔑 Tài khoản demo & phân quyền
 
-Để truy cập vào bảng điều khiển quản trị (Admin Dashboard) tại `/admin`, bạn có thể sử dụng tài khoản sau:
+Hệ thống có ba vai trò:
 
-- **Email**: `admin@gmail.com`
-- **Mật khẩu**: `1234`
+| Role | Quyền |
+|---|---|
+| `USER` | Khám phá bản đồ, lưu địa điểm, đóng góp địa điểm (chờ duyệt), viết review, báo cáo |
+| `DEMO` | Xem toàn bộ ứng dụng **kể cả trang quản trị `/admin`**, nhưng mọi thao tác ghi đều bị chặn và email người dùng được che bớt |
+| `ADMIN` | Toàn quyền quản trị: duyệt/xoá địa điểm, ẩn/xoá review, đổi quyền và xoá người dùng |
 
-*Lưu ý: Tài khoản này được sử dụng để kiểm duyệt các địa điểm mới và xem báo cáo phân tích của hệ thống.*
+Bản demo trực tuyến hiển thị thông tin tài khoản `DEMO` ngay trên trang đăng nhập (cấu hình bằng `NEXT_PUBLIC_DEMO_EMAIL` / `NEXT_PUBLIC_DEMO_PASSWORD`). Thông tin tài khoản `ADMIN` không được công khai.
+
+Thiết lập tài khoản (mặc định chạy thử, thêm `--yes` để ghi vào DB):
+
+```bash
+npx tsx scripts/setup-accounts.ts demo  <email>          # đặt role DEMO cho tài khoản có sẵn
+npx tsx scripts/setup-accounts.ts admin <email> [tên]    # nâng lên ADMIN hoặc tạo mới với mật khẩu ngẫu nhiên
+```
 
 ---
 *Phát triển với niềm đam mê mã nguồn sạch và giao diện đẹp mắt.*

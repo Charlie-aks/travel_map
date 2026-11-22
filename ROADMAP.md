@@ -60,10 +60,16 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [x] Client hiển thị lỗi theo `code` qua i18n (`src/i18n/apiError.ts`); form thêm địa điểm không còn báo "thành công" khi API từ chối
 
 ### 0.4 Cấu hình auth & tài khoản demo
-- [ ] NextAuth: `debug` chỉ bật ở development; tắt tự gộp tài khoản theo email
-- [ ] Trang login: gợi ý tài khoản demo lấy từ biến môi trường, ghi rõ "chỉ xem"; bỏ mật khẩu điền cứng
-- [ ] README: bỏ thông tin admin, mô tả tài khoản demo
-- [ ] ⚠️ Đổi role tài khoản demo sang `DEMO` và tạo tài khoản admin thật (cần bạn xác nhận DB trước khi chạy)
+- [x] NextAuth: `debug` chỉ bật ở development; tắt tự gộp tài khoản theo email (trang login hiện thông báo khi bị từ chối)
+- [x] Trang login: gợi ý tài khoản demo lấy từ `NEXT_PUBLIC_DEMO_EMAIL` / `NEXT_PUBLIC_DEMO_PASSWORD`, ghi rõ "chỉ xem", có nút điền nhanh; bỏ thông tin điền cứng
+- [x] README: bảng phân quyền USER/DEMO/ADMIN, hướng dẫn thiết lập tài khoản; thêm `.env.example`
+- [x] Script `scripts/setup-accounts.ts` (mặc định chạy thử, `--yes` mới ghi)
+- [ ] ⚠️ **Bạn cần làm** (mình chưa chạy vì ghi vào DB):
+  1. Xác nhận `DATABASE_URL` trong `.env.local` là DB nào (dev hay production)
+  2. `npx tsx scripts/setup-accounts.ts demo admin@gmail.com` → kiểm tra → thêm `--yes`
+  3. `npx tsx scripts/setup-accounts.ts admin <email-riêng-của-bạn> "<Tên>"` → kiểm tra → thêm `--yes` → lưu mật khẩu được in ra
+  4. Trên Vercel: đặt `NEXT_PUBLIC_DEMO_EMAIL=admin@gmail.com`, `NEXT_PUBLIC_DEMO_PASSWORD=1234` (tài khoản này giờ chỉ xem) rồi deploy lại
+  5. Thứ tự quan trọng: chỉ hiện gợi ý demo **sau khi** bước 2 đã chạy
 
 ### 0.5 Nâng cấp dependency
 - [ ] `next` + `eslint-config-next` + `@next/third-parties` → 16.4.x (vá CVE critical)
@@ -73,7 +79,7 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ### 0.6 Dọn repo
 - [ ] Xoá script tạm: `delete-users.ts`, `tmp-users.ts`, `check-db.js`, `test_db.ts`, `tsc.log`, `tsc_output.txt`, file upload thử trong `public/uploads/`
 - [ ] Gộp `implementation_plan.md.resolved` vào file này rồi xoá
-- [ ] Thêm `.env.example`
+- [x] Thêm `.env.example` (và bỏ chặn nó trong `.gitignore`)
 
 ---
 
@@ -118,6 +124,8 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong phần code của 0.4: cấu hình NextAuth an toàn, trang login dùng tài khoản demo từ biến môi trường, README + `.env.example`, script thiết lập tài khoản. **security-scan toàn bộ `src/`: 0 phát hiện** (ban đầu 22 HIGH / 7 MEDIUM). Còn chờ bạn chạy script trên DB (xem 0.4).
 
 - **2026-11-22** — Xong 0.3: khoá và validate toàn bộ API công khai (locations, reviews, reports, upload, chat, register, profile), thông báo lỗi i18n phía client, chatbot yêu cầu đăng nhập. Kiểm tra: tsc 0 lỗi · security-scan sạch trên 20 file đã sửa (sửa script bỏ qua comment ở quy tắc upload) · lỗi lint còn lại đều có sẵn từ trước.
 
