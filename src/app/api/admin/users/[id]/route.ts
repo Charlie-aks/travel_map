@@ -1,63 +1,64 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth-guard";
+import { handleRouteError } from "@/lib/route-error";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Ctx = { params: Promise<{ id: string }> };
+
+const idSchema = z.string().min(1).max(100);
+// DEMO không gán được qua API — tài khoản demo được thiết lập riêng.
+const patchSchema = z.object({ role: z.enum(["USER", "ADMIN"]) });
+
+export async function DELETE(_req: Request, { params }: Ctx) {
   try {
-    const session = await auth();
-    const { id } = await params;
+    const admin = await requireAdmin();
+    const id = idSchema.parse((await params).id);
 
-    // Must be admin
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (admin.id === id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account.", code: "FORBIDDEN" },
+        { status: 400 },
+      );
     }
 
-    // Prevent self-deletion
-    if (session.user.id === id) {
-      return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
+    const deleted = await db.delete(users).where(eq(users.id, id)).returning({ id: users.id });
+    if (deleted.length === 0) {
+      return NextResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
     }
-
-    await db.delete(users).where(eq(users.id, id));
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("Failed to delete user:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "DELETE /api/admin/users/[id]");
   }
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: Request, { params }: Ctx) {
   try {
-    const session = await auth();
-    const { id } = await params;
-    const { role } = await req.json();
+    const admin = await requireAdmin();
+    const id = idSchema.parse((await params).id);
+    const { role } = patchSchema.parse(await req.json());
 
-    // Must be admin
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (admin.id === id && role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "You cannot demote yourself.", code: "FORBIDDEN" },
+        { status: 400 },
+      );
     }
 
-    // Optional: Prevent self-role-change if you want to ensure at least one admin exists
-    // (Though simple check might not be enough for full safety)
-    if (session.user.id === id && role !== "ADMIN") {
-      return NextResponse.json({ error: "You cannot demote yourself." }, { status: 400 });
-    }
-
-    await db.update(users)
+    const updated = await db
+      .update(users)
       .set({ role })
-      .where(eq(users.id, id));
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+    if (updated.length === 0) {
+      return NextResponse.json({ error: "User not found", code: "NOT_FOUND" }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("Failed to update user role:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "PATCH /api/admin/users/[id]");
   }
 }

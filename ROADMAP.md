@@ -34,16 +34,18 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Giai đoạn 0 — Bảo mật
 
 ### 0.1 Nền tảng phân quyền
-- [ ] Cài `zod` làm dependency trực tiếp
-- [ ] `src/lib/auth-guard.ts`: `requireUser`, `requireWriter` (chặn DEMO), `requireAdmin`, `requireAdminViewer` (ADMIN hoặc DEMO) — đọc role từ DB, không tin JWT
-- [ ] `src/lib/route-error.ts`: chuẩn hoá response lỗi, không lộ chi tiết
+- [x] Cài `zod` (4.6.7) làm dependency trực tiếp
+- [x] `src/lib/auth-guard.ts`: `requireUser`, `requireWriter` (chặn DEMO), `requireAdmin`, `requireAdminViewer` (ADMIN hoặc DEMO) — đọc role từ DB, không tin JWT
+- [x] `src/lib/route-error.ts` (API route) và `src/lib/action-error.ts` (server action): chuẩn hoá lỗi, trả `code` (`UNAUTHORIZED`, `FORBIDDEN`, `DEMO_READ_ONLY`, `INVALID_INPUT`, `NOT_FOUND`, `INTERNAL`), không lộ chi tiết
+- [x] `src/lib/privacy.ts`: `maskEmail`, `publicUserColumns`
 
 ### 0.2 Khu vực admin
-- [ ] Server action trong `src/lib/actions/admin.ts` tự kiểm tra quyền ADMIN, validate id, đọc trạng thái từ DB
-- [ ] `/api/admin/*`: GET cho ADMIN + DEMO, ghi chỉ ADMIN; không trả cột `password`
-- [ ] Trang admin (server component) chỉ nạp các cột user cần thiết
-- [ ] Layout admin cho phép DEMO, hiện banner "chế độ demo — chỉ xem"
-- [ ] UI admin hiển thị lỗi khi thao tác bị từ chối
+- [x] Server action trong `src/lib/actions/admin.ts` tự kiểm tra quyền ADMIN, validate id, đọc trạng thái review từ DB (không tin tham số client)
+- [x] `/api/admin/*`: GET cho ADMIN + DEMO, ghi chỉ ADMIN; chỉ chọn cột cần thiết (không còn `password`); PATCH role chỉ nhận `USER`/`ADMIN`
+- [x] DEMO xem danh sách user thấy email đã che; tìm kiếm user chỉ theo tên (chống dò email)
+- [x] Trang reports (server component) chỉ nạp cột user công khai
+- [x] Layout admin cho phép DEMO (role đọc từ DB), hiện banner "chế độ demo — chỉ xem"
+- [x] UI admin hiển thị thông báo khi thao tác bị từ chối (`src/app/admin/components/action-feedback.ts`); trang users có bộ lọc DEMO
 
 ### 0.3 API công khai
 - [ ] `POST /api/locations`: bắt buộc đăng nhập, validate
@@ -114,5 +116,7 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong 0.1 + 0.2: helper phân quyền (role từ DB, role DEMO chỉ xem), sửa server action admin và toàn bộ `/api/admin/*`, che email cho DEMO, banner demo. Kiểm tra: tsc 0 lỗi · security-scan sạch trên 17 file đã sửa · lỗi lint còn lại đều có sẵn từ trước. Chưa chạy thử thực tế (cần DB + tài khoản DEMO — xem 0.4).
 
 - **2026-11-22** — Đánh giá project; tạo skill (`api-route`, `server-action`, `db-change`, `verify`), agent (`security-reviewer`, `next-docs-researcher`, `ui-feature-builder`, `db-architect`), bổ sung `AGENTS.md`, tạo roadmap này. Baseline: tsc 0 lỗi · ESLint 68 lỗi/93 cảnh báo · security-scan 22 HIGH/7 MEDIUM · npm audit 34 lỗ hổng (5 critical).

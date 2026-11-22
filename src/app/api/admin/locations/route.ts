@@ -1,43 +1,39 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { z } from "zod";
 import { db } from "@/db";
 import { locations } from "@/db/schema";
 import { desc, eq, and } from "drizzle-orm";
+import { requireAdminViewer } from "@/lib/auth-guard";
+import { handleRouteError } from "@/lib/route-error";
+import { publicUserColumns } from "@/lib/privacy";
+
+const querySchema = z.object({
+  category: z.string().max(50).default("ALL"),
+  status: z.string().max(20).default("ALL"),
+});
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    await requireAdminViewer();
 
     const { searchParams } = new URL(req.url);
-    const category = searchParams.get("category");
-    const status = searchParams.get("status");
+    const { category, status } = querySchema.parse({
+      category: searchParams.get("category") ?? undefined,
+      status: searchParams.get("status") ?? undefined,
+    });
 
     const filters = [];
-    if (category && category !== "ALL") {
-      filters.push(eq(locations.category, category));
-    }
-    if (status && status !== "ALL") {
-      filters.push(eq(locations.status, status));
-    }
-
-    const whereClause = filters.length > 0 
-      ? (filters.length === 1 ? filters[0] : and(...filters)) 
-      : undefined;
+    if (category !== "ALL") filters.push(eq(locations.category, category));
+    if (status !== "ALL") filters.push(eq(locations.status, status));
 
     const allLocations = await db.query.locations.findMany({
-      where: whereClause,
-      with: {
-        author: true,
-      },
+      where: filters.length > 0 ? and(...filters) : undefined,
+      with: { author: { columns: publicUserColumns } },
       orderBy: [desc(locations.createdAt)],
     });
 
     return NextResponse.json(allLocations);
-  } catch (error: any) {
-    console.error("Failed to fetch admin locations:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error) {
+    return handleRouteError(error, "GET /api/admin/locations");
   }
 }

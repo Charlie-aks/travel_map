@@ -15,6 +15,7 @@ import { reports, reviews } from "@/db/schema";
 import { desc, inArray } from "drizzle-orm";
 import { ReviewRowActions } from "./ReviewRowActions";
 import { ReviewDetailModal } from "./ReviewDetailModal";
+import { publicUserColumns } from "@/lib/privacy";
 
 interface PageProps {
   searchParams: {
@@ -25,13 +26,16 @@ interface PageProps {
 export default async function ReportsManagementPage({ searchParams }: PageProps) {
   const dbReports = await db.query.reports.findMany({
     orderBy: [desc(reports.createdAt)],
-    with: { reporter: true }
+    with: { reporter: { columns: publicUserColumns } }
   });
 
   const reviewIds = dbReports.filter(r => r.targetType === 'REVIEW').map(r => r.targetId);
   const targetReviews = reviewIds.length > 0 ? await db.query.reviews.findMany({
     where: inArray(reviews.id, reviewIds),
-    with: { location: true, author: true }
+    with: {
+      location: { columns: { id: true, title: true, imageUrl: true } },
+      author: { columns: publicUserColumns },
+    }
   }) : [];
 
   const displayData = dbReports.map(report => {

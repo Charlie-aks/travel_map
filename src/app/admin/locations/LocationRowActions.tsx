@@ -3,6 +3,7 @@
 import { CheckCircle, Trash2, Eye, Edit2 } from "lucide-react";
 import { useTransition } from "react";
 import { approveLocationAction, deleteLocationAction } from "@/lib/actions/admin";
+import { actionErrorMessage } from "../components/action-feedback";
 
 export function LocationRowActions({ id, status, onView, onEdit, onActionComplete }: { id: string, status: string | null, onView?: () => void, onEdit?: () => void, onActionComplete?: () => void }) {
   const [isPending, startTransition] = useTransition();
@@ -14,7 +15,11 @@ export function LocationRowActions({ id, status, onView, onEdit, onActionComplet
           disabled={isPending}
           onClick={() => {
             startTransition(async () => {
-              await approveLocationAction(id);
+              const result = await approveLocationAction(id);
+              if ("error" in result) {
+                alert(actionErrorMessage(result.code));
+                return;
+              }
               onActionComplete?.();
             });
           }}
@@ -45,7 +50,11 @@ export function LocationRowActions({ id, status, onView, onEdit, onActionComplet
         onClick={() => {
           if(confirm("Bạn có chắc chắn muốn xóa địa điểm này không? Hành động này không thể hoàn tác.")) {
             startTransition(async () => {
-              await deleteLocationAction(id);
+              const result = await deleteLocationAction(id);
+              if ("error" in result) {
+                alert(actionErrorMessage(result.code));
+                return;
+              }
               onActionComplete?.();
             });
           }

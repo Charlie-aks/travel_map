@@ -31,10 +31,11 @@ const PUBLIC_MUTATION_ROUTES = new Set([
 ]);
 
 // Các lời gọi được coi là "có kiểm tra đăng nhập/quyền".
-const AUTH_CALL = /\b(auth|requireUser|requireAdmin)\s*\(/;
+// Helper trong src/lib/auth-guard.ts: requireUser, requireWriter, requireAdmin, requireAdminViewer.
+const AUTH_CALL = /\b(auth|requireUser|requireWriter|requireAdmin|requireAdminViewer)\s*\(/;
 // Dấu hiệu đã thực sự CHẶN request khi không đủ quyền (không chỉ gọi auth()).
-const AUTH_ENFORCED = /\b(requireUser|requireAdmin)\s*\(|if\s*\(\s*!\s*session\b|session\?\.user\?\.(id|role)\s*!==?|!\s*session\?\.user/;
-const ADMIN_CHECK =/\brequireAdmin\s*\(|role\s*[!=]==?\s*["']ADMIN["']|["']ADMIN["']\s*[!=]==?\s*\S*role/;
+const AUTH_ENFORCED = /\b(requireUser|requireWriter|requireAdmin|requireAdminViewer)\s*\(|if\s*\(\s*!\s*session\b|session\?\.user\?\.(id|role)\s*!==?|!\s*session\?\.user/;
+const ADMIN_CHECK = /\b(requireAdmin|requireAdminViewer)\s*\(|role\s*[!=]==?\s*["']ADMIN["']|["']ADMIN["']\s*[!=]==?\s*\S*role/;
 
 function toPosix(p) {
   return p.split(sep).join("/");
