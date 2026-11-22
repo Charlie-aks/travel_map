@@ -2,7 +2,7 @@
 
 Kế hoạch và tiến độ nâng cấp project sau thời gian tạm dừng. File này là nguồn sự thật về **đang làm gì, đã xong gì, đã quyết định gì** — cập nhật sau mỗi nhóm việc.
 
-**Cập nhật lần cuối:** 2026-11-22 · **Giai đoạn hiện tại:** 0 — Bảo mật (code xong, chờ bạn thiết lập tài khoản trên DB) · **Nhánh:** `upgrade/phase-0-security`
+**Cập nhật lần cuối:** 2026-11-22 · **Giai đoạn hiện tại:** 0 — Bảo mật (xong, chờ merge + deploy) · **Nhánh:** `upgrade/phase-0-security`
 
 Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa làm · ⚠️ cần bạn thao tác hoặc quyết định
 
@@ -12,7 +12,7 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 
 | Giai đoạn | Mục tiêu | Trạng thái |
 |---|---|---|
-| 0. Bảo mật | Vá lỗ hổng có thể khai thác, nâng cấp bản vá CVE, dọn repo | 🟢 Code xong · ⚠️ chờ thiết lập tài khoản (0.4) |
+| 0. Bảo mật | Vá lỗ hổng có thể khai thác, nâng cấp bản vá CVE, dọn repo | 🟢 Xong · ⚠️ chờ merge + deploy + đổi `AUTH_SECRET` (0.4) |
 | 1. Nền móng | Validate thống nhất, type từ schema, migration + index + enum, lint sạch, test | ⚪ Chưa bắt đầu |
 | 2. Bỏ dữ liệu giả | Gamification, collections, rating, khoảng cách dùng dữ liệu thật | ⚪ Chưa bắt đầu |
 | 3. Tính năng mới | Chỉ đường, lịch trình thông minh, gợi ý, chatbot có tool | ⚪ Chưa bắt đầu |
@@ -64,12 +64,13 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 - [x] Trang login: gợi ý tài khoản demo lấy từ `NEXT_PUBLIC_DEMO_EMAIL` / `NEXT_PUBLIC_DEMO_PASSWORD`, ghi rõ "chỉ xem", có nút điền nhanh; bỏ thông tin điền cứng
 - [x] README: bảng phân quyền USER/DEMO/ADMIN, hướng dẫn thiết lập tài khoản; thêm `.env.example`
 - [x] Script `scripts/setup-accounts.ts` (mặc định chạy thử, `--yes` mới ghi)
-- [ ] ⚠️ **Bạn cần làm** (mình chưa chạy vì ghi vào DB):
-  1. Xác nhận `DATABASE_URL` trong `.env.local` là DB nào (dev hay production)
-  2. `npx tsx scripts/setup-accounts.ts demo admin@gmail.com` → kiểm tra → thêm `--yes`
-  3. `npx tsx scripts/setup-accounts.ts admin <email-riêng-của-bạn> "<Tên>"` → kiểm tra → thêm `--yes` → lưu mật khẩu được in ra
-  4. Trên Vercel: đặt `NEXT_PUBLIC_DEMO_EMAIL=admin@gmail.com`, `NEXT_PUBLIC_DEMO_PASSWORD=1234` (tài khoản này giờ chỉ xem) rồi deploy lại
-  5. Thứ tự quan trọng: chỉ hiện gợi ý demo **sau khi** bước 2 đã chạy
+- [x] Xác nhận DB: local và Vercel production **dùng chung** một database Neon
+- [x] `admin@gmail.com` đã chuyển ADMIN → **DEMO** trên DB production (2026-11-22, chủ project đồng ý). Không cần tạo admin mới: tài khoản admin riêng của chủ project vẫn là ADMIN
+- [x] Test với tài khoản DEMO thật trên build local: đọc dashboard/users OK (email bị che); 9 loại thao tác ghi (xoá/đổi quyền user, tạo/xoá địa điểm, review, report, đổi tên, chat, upload) đều 403 `DEMO_READ_ONLY`
+- [ ] ⚠️ **Bạn cần làm khi deploy:**
+  1. Merge nhánh `upgrade/phase-0-security` → deploy lên Vercel
+  2. Trên Vercel đặt `NEXT_PUBLIC_DEMO_EMAIL=admin@gmail.com`, `NEXT_PUBLIC_DEMO_PASSWORD=1234` (biến `NEXT_PUBLIC_*` được nhúng lúc build → đặt **trước** khi deploy, hoặc deploy lại sau khi đặt)
+  3. Đổi `AUTH_SECRET` trên Vercel (`npx auth secret`) và deploy lại — vô hiệu mọi phiên đăng nhập cũ, gồm các phiên còn mang role ADMIN trong JWT của tài khoản demo
 
 ### 0.5 Nâng cấp dependency
 - [x] `next` + `eslint-config-next` + `@next/third-parties` 16.2.2 → 16.4.6 (vá CVE critical)
@@ -117,7 +118,7 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 - [ ] Sửa luồng "yêu cầu sửa địa điểm" (hiện tạo bản ghi mới có tiền tố, duyệt xong thành bản trùng)
 - [ ] Chuẩn hoá email (chữ thường) khi đăng ký và đăng nhập — cần xử lý dữ liệu cũ có chữ hoa
 - [ ] README: thay hướng dẫn `drizzle-kit push` bằng `migrate` sau khi có baseline
-- [ ] Test chạy thử với tài khoản DEMO thật: vào admin, thử duyệt/xoá → bị chặn, email bị che
+- [ ] Tạo **Neon branch dev** cho môi trường local (hiện local ghi thẳng vào DB production) — làm trước baseline migration
 
 ## Giai đoạn 2 — Bỏ dữ liệu giả
 
@@ -149,6 +150,8 @@ Kết quả review: 2 HIGH · 3 MEDIUM · 4 LOW, cộng 2 lỗi chức năng.
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xác nhận local và production dùng chung DB Neon. Đã chuyển `admin@gmail.com` sang DEMO trên DB production (2 ADMIN → 1 ADMIN riêng của chủ project + 1 DEMO). Test đầu-cuối với tài khoản DEMO thật trên build local: đọc OK, email bị che, 9/9 thao tác ghi bị chặn. Còn lại: merge, deploy, đặt biến demo, đổi `AUTH_SECRET`.
 
 - **2026-11-22** — Chạy agent `security-reviewer` trên toàn nhánh: 2 HIGH, 3 MEDIUM, 4 LOW. Xong 0.7, sửa toàn bộ HIGH/MEDIUM và phần lớn LOW (chi tiết ở 0.7). Kiểm tra: tsc 0 lỗi · security-scan sạch toàn `src/` · build OK · smoke test: chat/upload/saved trả 401 khi chưa đăng nhập, request RSC vào `/admin/reports` trả 307 không có dữ liệu.
 
