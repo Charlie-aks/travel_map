@@ -72,9 +72,11 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
   5. Thứ tự quan trọng: chỉ hiện gợi ý demo **sau khi** bước 2 đã chạy
 
 ### 0.5 Nâng cấp dependency
-- [ ] `next` + `eslint-config-next` + `@next/third-parties` → 16.4.x (vá CVE critical)
-- [ ] `next-auth` → 5.0.0-beta mới nhất (vá `@auth/core`)
-- [ ] `npm audit fix` (không `--force`), build lại
+- [x] `next` + `eslint-config-next` + `@next/third-parties` 16.2.2 → 16.4.6 (vá CVE critical)
+- [x] `next-auth` beta.30 → beta.32 (vá `@auth/core`)
+- [x] `@vercel/blob` 2.3 → 2.9, `tsx` 4.21 → 4.23; `overrides.zod` ép mọi bản zod về 4.6.7; `shadcn` (CLI) chuyển sang devDependencies
+- [x] `npm audit fix` (không `--force`). Kết quả: **production 0 lỗ hổng** (trước: 34, 5 critical). Còn 8 moderate trong công cụ dev (`drizzle-kit` → esbuild cũ, `shadcn` → minimatch), chưa có bản sửa cùng major — chấp nhận
+- [x] `npm run build` thành công; chạy thử server production: mọi API ghi/admin trả 401 khi chưa đăng nhập, register trả 400 khi dữ liệu sai, `/admin` redirect về `/`
 
 ### 0.6 Dọn repo
 - [ ] Xoá script tạm: `delete-users.ts`, `tmp-users.ts`, `check-db.js`, `test_db.ts`, `tsc.log`, `tsc_output.txt`, file upload thử trong `public/uploads/`
@@ -124,6 +126,8 @@ Ký hiệu: `[x]` xong · `[~]` đang làm / làm một phần · `[ ]` chưa l�
 ## Nhật ký
 
 Mới nhất ở trên. Mỗi dòng: ngày · việc đã làm · commit.
+
+- **2026-11-22** — Xong 0.5: nâng Next 16.4.6, next-auth beta.32 và các bản vá; npm audit production 0 lỗ hổng; build thành công; smoke test bằng curl trên server production xác nhận chặn quyền (11 endpoint → 401, validate register → 400).
 
 - **2026-11-22** — Xong phần code của 0.4: cấu hình NextAuth an toàn, trang login dùng tài khoản demo từ biến môi trường, README + `.env.example`, script thiết lập tài khoản. **security-scan toàn bộ `src/`: 0 phát hiện** (ban đầu 22 HIGH / 7 MEDIUM). Còn chờ bạn chạy script trên DB (xem 0.4).
 
